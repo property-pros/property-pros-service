@@ -11,7 +11,7 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	gormMock "github.com/Selvatico/go-mocket"
 	"github.com/jinzhu/gorm"
-	i "github.com/vireocloud/property-pros-service/src/interfaces"
+	i "github.com/vireocloud/property-pros-service/interfaces"
 )
 
 func SaveExpectations(model *FakeModel) {

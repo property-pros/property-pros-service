@@ -9,7 +9,7 @@ import (
 
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
-	i "github.com/vireocloud/property-pros-service/src/interfaces"
+	i "github.com/vireocloud/property-pros-service/interfaces"
 )
 
 type GormRepository struct {

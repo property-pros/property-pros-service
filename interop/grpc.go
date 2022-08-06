@@ -1,0 +1,15 @@
+package interop
+
+import (
+	propertyProsApi "github.com/vireocloud/property-pros-docs/generated/notePurchaseAgreement"
+	"google.golang.org/grpc"
+)
+
+type UnsafeNotePurchaseAgreementServiceServer = propertyProsApi.UnsafeNotePurchaseAgreementServiceServer
+type NotePurchaseAgreementServiceServer = propertyProsApi.NotePurchaseAgreementServiceServer
+
+type NotePurchaseAgreement = propertyProsApi.NotePuchaseAgreement
+type GetNotePurchaseAgreementDocRequest = propertyProsApi.GetNotePurchaseAgreementDocRequest
+type GetNotePurchaseAgreementDocResponse = propertyProsApi.GetNotePurchaseAgreementDocResponse
+type NotePurchaseAgreementServiceClient = propertyProsApi.NotePurchaseAgreementServiceClient
+type CallOption = grpc.CallOption
