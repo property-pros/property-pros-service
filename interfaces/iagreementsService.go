@@ -8,4 +8,5 @@ import (
 
 type IAgreementsService interface {
 	GetNotePurchaseAgreementDocContent(context.Context, *interop.NotePurchaseAgreement) ([]byte, error)
+	Save(context.Context, *interop.NotePurchaseAgreement) (*interop.NotePurchaseAgreement, error)
 }

@@ -1,171 +1,110 @@
 package data
 
 import (
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	//according to gorm docs, this import is necessary
 	"errors"
 	"log"
-	"reflect"
 
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	_ "gorm.io/driver/postgres"
 
+	"github.com/vireocloud/property-pros-service/interfaces"
 	i "github.com/vireocloud/property-pros-service/interfaces"
 )
 
-type GormRepository struct {
-	i.IRepository
+type RepositoryModelConstraint[T any] interface {
+	interfaces.IModelPayload
+	*T
+}
+
+type GormRepository[T any, PT RepositoryModelConstraint[T]] struct {
+	i.IRepository[T]
 	db *gorm.DB
 }
 
-var ID_FIELD_NAME = "ID"
+var ID_FIELD_NAME = "Id"
 
-func (repo *GormRepository) SetDb(db *gorm.DB) {
+func (repo *GormRepository[T, PT]) SetDb(db *gorm.DB) {
 	repo.db = db
 }
 
-func (repo *GormRepository) Save(payload interface{}, query interface{}) (interface{}, error) {
-	results, err := repo.FindOne(query)
+func (repo *GormRepository[T, PT]) Save(payload *T) (*T, error) {
 
-	if err != nil && results == nil {
-		return repo.db.Model(query).Create(payload).Value, nil
-	}
+	var model *T = payload
 
-	return repo.db.Model(query).Updates(payload).Value, nil
+	modelResult := repo.db.Debug().Model(payload)
+
+	err := modelResult.Save(model).Error
+
+	return model, err
+
 }
 
-func (repo *GormRepository) FindOne(payload interface{}) (interface{}, error) {
+func (repo *GormRepository[T, PT]) Create(payload *T, query *T) (*T, error) {
 
-	emptyResultSlicePointer := repo.createEmptyResultSet(payload)
+	var model *T = payload
 
-	repo.db.Where(ID_FIELD_NAME+" = ?", repo.getIDValue(payload)).Find(emptyResultSlicePointer)
+	modelResult := repo.db.Model(payload)
 
-	results := InterfaceSlice(emptyResultSlicePointer)
+	err := modelResult.Create(model).Error
+
+	return model, err
+}
+
+func (repo *GormRepository[T, PT]) Update(payload *T, query *T) (*T, error) {
+	model := repo.db.Debug().Model(payload)
+	modelTransaction := model.Begin()
+	// modelTransaction.
+	modelUpdates := modelTransaction.Set(PT(payload).GetId(), payload)
+	// modelUpdates := modelQuery.Updates(payload)
+	modelCommitted := modelUpdates.Commit()
+	err := modelCommitted.Scan(payload).Error
+
+	return payload, err
+}
+
+func (repo *GormRepository[T, PT]) FindOne(payload *T) (*T, error) {
+	results := []*T{}
+
+	err := repo.db.Model(payload).Scan(results).Error
+
+	if err != nil {
+		return nil, err
+	}
 
 	resultCount := len(results)
 
 	if resultCount > 1 {
-		return results, errors.New("More than one result returned for query in FindOne()")
+		return nil, errors.New("more than one result returned for query in FindOne()")
 	}
 
 	if resultCount == 0 {
-		return nil, errors.New("Zero results returned for query in FindOne()")
+		return nil, errors.New("zero results returned for query in FindOne()")
 	}
 
 	return results[0], nil
 }
 
-func (repo *GormRepository) Query(query interface{}) []interface{} {
+func (repo *GormRepository[T, PT]) Query(query *T) []*T {
 
-	emptyResultSlicePointer := repo.createEmptyResultSet(query)
+	var results interface{} = []*T{}
 
-	repo.db.Where(query).Find(emptyResultSlicePointer)
+	// whereResult := repo.db.Where()
+	repo.db.Find(&results, query)
 
-	return InterfaceSlice(emptyResultSlicePointer)
+	return results.([]*T)
 }
 
-func (repo *GormRepository) Delete(query interface{}) (interface{}, error) {
+func (repo *GormRepository[T, PT]) Delete(query *T) (*T, error) {
 	log.Printf("delete entity: %v", query)
-	repo.db.Delete(query)
+
+	repo.db.Model(query).Delete(query)
 
 	return query, nil
 }
 
-func (repo *GormRepository) ensureValueObject(entity interface{}) interface{} {
-	payloadType := reflect.TypeOf(entity)
-
-	if payloadType.Kind() == reflect.Ptr {
-		return reflect.ValueOf(entity).Elem().Interface()
+func NewGormRepository[T any, PT RepositoryModelConstraint[T]](db *gorm.DB) interfaces.IRepository[T] {
+	return &GormRepository[T, PT]{
+		db: db,
 	}
-
-	return entity
-}
-
-func (repo *GormRepository) Initialize() error {
-
-	db, err := gorm.Open("postgres", "host=myhost port=myport user=gorm dbname=gorm password=mypassword")
-
-	defer db.Close()
-
-	repo.db = db
-
-	return err
-}
-
-func InterfaceSlice(slice interface{}) []interface{} {
-	s := reflect.ValueOf(slice).Elem()
-	if s.Kind() != reflect.Slice {
-		panic("InterfaceSlice() given a non-slice type")
-	}
-
-	ret := make([]interface{}, s.Len())
-
-	for i := 0; i < s.Len(); i++ {
-		ret[i] = s.Index(i).Interface()
-	}
-
-	return ret
-}
-
-func (repo *GormRepository) GetQueryAndPayload(payload interface{}) (newPayload interface{}, query interface{}) {
-
-	var payloadValueInfo reflect.Value
-	var newQueryObject reflect.Value
-
-	payloadType := reflect.TypeOf(payload)
-
-	payloadIsPtr := payloadType.Kind() == reflect.Ptr
-
-	if payloadIsPtr {
-		payloadType = payloadType.Elem()
-
-		payloadValueInfo = reflect.ValueOf(payload).Elem()
-	} else {
-		payloadValueInfo = reflect.ValueOf(payload)
-	}
-
-	newQueryObject = reflect.New(payloadType).Elem()
-
-	idField := payloadValueInfo.FieldByName(ID_FIELD_NAME)
-
-	newQueryObject.FieldByName(ID_FIELD_NAME).SetUint(idField.Uint())
-
-	if payloadIsPtr {
-		idField.SetUint(0)
-	}
-
-	if payloadIsPtr {
-		payloadValueInfo = payloadValueInfo.Addr()
-		newQueryObject = newQueryObject.Addr()
-	}
-
-	return payloadValueInfo.Interface(), newQueryObject.Interface()
-}
-
-func (repo *GormRepository) createEmptyResultSet(payload interface{}) interface{} { // (pointerInterface interface{}, innerSlice interface{}, pointer reflect.Value) {
-
-	payloadInfo := reflect.ValueOf(payload)
-	payloadType := payloadInfo.Type()
-
-	sliceType := reflect.SliceOf(payloadType)
-
-	emptySlice := reflect.MakeSlice(sliceType, 0, 100000)
-
-	pointerInstanceValueInfo := reflect.New(sliceType)
-
-	pointerInstanceValueInfo.Elem().Set(emptySlice)
-
-	pointerInstance := pointerInstanceValueInfo.Interface()
-
-	return pointerInstance
-}
-
-func (repo *GormRepository) getIDValue(entity interface{}) uint64 {
-
-	entityValue := reflect.ValueOf(entity)
-
-	if entityValue.Kind() == reflect.Ptr {
-		entityValue = entityValue.Elem()
-	}
-
-	return entityValue.FieldByName(ID_FIELD_NAME).Uint()
 }

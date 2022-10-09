@@ -1,11 +1,9 @@
 package interfaces
 
-type IRepository interface {
+type IRepository[T any] interface {
 	Get(uint)
-	Save(payload interface{}, query interface{}) (interface{}, error)
-	FindOne(interface{}) (interface{}, error)
-	Query(interface{}) []interface{}
-	Delete(interface{}) (interface{}, error)
-	Initialize() error
-	GetQueryAndPayload(payload interface{}) (newPayload interface{}, query interface{})
+	Save(payload *T) (*T, error)
+	FindOne(*T) (*T, error)
+	Query(*T) []*T
+	Delete(*T) (*T, error)
 }

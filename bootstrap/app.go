@@ -22,11 +22,11 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 
-	"github.com/vireocloud/property-pros-service/server/gateway"
-
-	propertyProsApi "github.com/vireocloud/property-pros-docs/generated/notePurchaseAgreement"
 	"github.com/vireocloud/property-pros-service/config"
+	"github.com/vireocloud/property-pros-service/interop"
 	controllers "github.com/vireocloud/property-pros-service/server/controllers"
+	"github.com/vireocloud/property-pros-service/server/gateway"
+	"github.com/vireocloud/property-pros-service/server/interceptors"
 	"github.com/vireocloud/property-pros-service/server/third_party"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -36,14 +36,18 @@ var (
 )
 
 type App struct {
-	config                          *config.Config
-	notePurchaseAgreementController *controllers.NotePurchaseAgreementController
+	Config          *config.Config
+	Controller      *controllers.PropertyProsApiController
+	apiInterceptor  *interceptors.AuthValidationInterceptor
+	grpcInterceptor *interceptors.GrpcInterceptor
 }
 
-func NewApp(notePurchaseAgreementController *controllers.NotePurchaseAgreementController, configuration *config.Config) *App {
+func NewApp(notePurchaseAgreementController *controllers.PropertyProsApiController, configuration *config.Config, grpcInterceptor *interceptors.GrpcInterceptor) *App {
+
 	return &App{
-		notePurchaseAgreementController: notePurchaseAgreementController,
-		config:                          configuration,
+		Controller:      notePurchaseAgreementController,
+		Config:          configuration,
+		grpcInterceptor: grpcInterceptor,
 	}
 }
 
@@ -63,9 +67,9 @@ func (a *App) Run() error {
 
 		addr := fmt.Sprintf(":%v", port)
 
-		grpcServer := grpc.NewServer()
-
-		a.registerControllers(grpcServer)
+		grpcServer := grpc.NewServer(
+			grpc.UnaryInterceptor(a.grpcInterceptor.HandleRequest),
+		)
 
 		wrappedServer := grpcweb.WrapServer(grpcServer)
 
@@ -78,42 +82,27 @@ func (a *App) Run() error {
 			Handler: http.HandlerFunc(handler),
 		}
 
-		b, err := json.MarshalIndent(grpcweb.ListGRPCResources(grpcServer), "", "  ")
-		if err == nil {
-			grpclog.Infof("Available Grpc Commands: %v", string(b))
-		} else {
+		err := a.LogAvailableGrpcMethods(grpcServer)
+
+		if err != nil {
 			return err
 		}
 
-		if *enableTls {
-			go func() {
-				grpclog.Info("Serving gRPC on https://", addr)
-				if err := httpServer.ListenAndServeTLS("insecure/cert", "insecure/key"); err != nil {
-					grpclog.Fatalf("failed starting http2 server: %v", err)
-				}
-			}()
-
-			err = gateway.Run("dns:///"+addr, enableTls)
-
-			if err != nil {
-				log.Fatalln(err)
-				return err
+		go func() {
+			grpclog.Info("Serving gRPC on https://", addr)
+			if err := httpServer.ListenAndServeTLS("insecure/cert", "insecure/key"); err != nil {
+				grpclog.Fatalf("failed starting http2 server: %v", err)
 			}
-		} else {
-			go func() {
-				grpclog.Info("Serving gRPC on http://", addr)
-				if err := httpServer.ListenAndServe(); err != nil {
-					grpclog.Fatalf("failed starting http server: %v", err)
-				}
-			}()
+		}()
 
-			err = gateway.Run("dns:///"+addr, enableTls)
+		err = gateway.Run("dns:///"+addr, enableTls)
 
-			if err != nil {
-				log.Fatalln(err)
-				return err
-			}
+		if err != nil {
+			log.Fatalln(err)
+			return err
 		}
+
+		// a.registerControllers(grpcServer)
 	} else {
 		return a.StartInsecureServer()
 	}
@@ -121,10 +110,36 @@ func (a *App) Run() error {
 	return nil
 }
 
-func (a *App) registerControllers(grpcServer *grpc.Server) {
+func (*App) LogAvailableGrpcMethods(grpcServer *grpc.Server) error {
+	b, err := json.MarshalIndent(grpcweb.ListGRPCResources(grpcServer), "", "  ")
 
-	propertyProsApi.RegisterNotePurchaseAgreementServiceServer(grpcServer, a.notePurchaseAgreementController)
+	if err == nil {
+		grpclog.Infof("Available Grpc Commands: %v", string(b))
+	} else {
+		return err
+	}
+	return err
+}
 
+func (a *App) registerControllers(grpcServer *grpc.Server, ctx context.Context, gwmux *runtime.ServeMux, dialUrl string, dopts []grpc.DialOption) error {
+	interop.RegisterNotePurchaseAgreementServiceServer(grpcServer, a.Controller)
+	interop.RegisterAuthenticationServiceServer(grpcServer, a.Controller)
+
+	err := interop.RegisterNotePurchaseAgreementServiceHandlerFromEndpoint(ctx, gwmux, dialUrl, dopts)
+
+	if err != nil {
+		grpclog.Fatalf("failed starting http server: %v", err)
+		return err
+	}
+
+	err = interop.RegisterAuthenticationServiceHandlerFromEndpoint(ctx, gwmux, dialUrl, dopts)
+
+	if err != nil {
+		grpclog.Fatalf("failed starting http server: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 func grpcHandlerFunc(grpcServer *grpc.Server, grpcWebServer *grpcweb.WrappedGrpcServer, restHandler http.Handler, oa http.Handler) http.Handler {
@@ -132,6 +147,7 @@ func grpcHandlerFunc(grpcServer *grpc.Server, grpcWebServer *grpcweb.WrappedGrpc
 	return h2c.NewHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("handling request")
 		grpclog.Infof("url: %v\r\n\r\ncontent type: %v\r\n\r\n", r.URL.Path, r.Header.Get("Content-Type"))
+
 		if strings.Contains(r.Header.Get("Content-Type"), "application/grpc-web+proto") {
 			grpclog.Infoln("grpc-web request")
 			grpcWebServer.ServeHTTP(w, r)
@@ -140,6 +156,7 @@ func grpcHandlerFunc(grpcServer *grpc.Server, grpcWebServer *grpcweb.WrappedGrpc
 
 		if strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
 			grpclog.Infoln("grpc request")
+
 			grpcServer.ServeHTTP(w, r)
 			return
 		}
@@ -158,43 +175,55 @@ func grpcHandlerFunc(grpcServer *grpc.Server, grpcWebServer *grpcweb.WrappedGrpc
 func (a *App) StartInsecureServer() error {
 	wg := sync.WaitGroup{}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(a.grpcInterceptor.HandleRequest))
 
 	wrappedServer := grpcweb.WrapServer(grpcServer)
 
-	a.registerControllers(grpcServer)
-
 	gwmux := runtime.NewServeMux()
 
-	ctx := context.Background()
+	parentContext := context.Background()
 
-	dopts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	ctx, cancel := context.WithCancel(parentContext)
 
-	port := a.config.ListenPort
+	dopts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+
+	port := a.Config.ListenPort
 	scheme := "dns:///"
 
-	serverUrl := fmt.Sprintf("%v:%v", a.config.ListenAddress, port)
+	serverUrl := fmt.Sprintf("%v:%v", a.Config.ListenAddress, port)
 	dialUrl := fmt.Sprintf("%vlocalhost:%v", scheme, port)
 
 	fmt.Println("server url: ", serverUrl)
 	fmt.Println("dial url: ", dialUrl)
+	var err error
+	go (func(grpcServer *grpc.Server, ctx context.Context, gwmux *runtime.ServeMux, dialUrl string, dopts []grpc.DialOption, returnErr *error) {
+		err := a.registerControllers(grpcServer, ctx, gwmux, dialUrl, dopts)
+
+		if err != nil {
+			fmt.Println("registerControllers failed: ", err)
+			returnErr = &err
+			cancel()
+		}
+
+		err = a.LogAvailableGrpcMethods(grpcServer)
+
+		if err != nil {
+			returnErr = &err
+			cancel()
+		}
+	})(grpcServer, ctx, gwmux, dialUrl, dopts, &err)
 
 	wg.Add(1)
 
 	go func() {
-		fmt.Printf("Listening at %v", a.config.ListenAddress)
+		fmt.Printf("Listening at %v", a.Config.ListenAddress)
 		if err := http.ListenAndServe(serverUrl, grpcHandlerFunc(grpcServer, wrappedServer, gwmux, getOpenAPIHandler())); err != nil {
 			fmt.Println("Http listener failed: ", err)
 			wg.Done()
 		}
 	}()
-
-	err := propertyProsApi.RegisterNotePurchaseAgreementServiceHandlerFromEndpoint(ctx, gwmux, dialUrl, dopts)
-
-	if err != nil {
-		grpclog.Fatalf("failed starting http server: %v", err)
-		return err
-	}
 
 	wg.Wait()
 
@@ -221,8 +250,8 @@ func NewGrpcConnection(config *config.Config) grpc.ClientConnInterface {
 	return connection
 }
 
-func NewNotePurchaseAgreementClient(conn grpc.ClientConnInterface) propertyProsApi.NotePurchaseAgreementServiceClient {
+func NewNotePurchaseAgreementClient(conn grpc.ClientConnInterface) interop.NotePurchaseAgreementServiceClient {
 
-	return propertyProsApi.NewNotePurchaseAgreementServiceClient(conn)
+	return interop.NewNotePurchaseAgreementServiceClient(conn)
 
 }

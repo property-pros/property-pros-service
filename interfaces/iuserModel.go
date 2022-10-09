@@ -1,12 +1,12 @@
 package interfaces
 
+import "github.com/vireocloud/property-pros-service/interop"
+
 type IUserModel interface {
-	GetId() uint32
-	GetFirstName() string
-	GetLastName() string
-	GetDateOfBirth() string
-	GetHomeAddress() string
-	GetEmailAddress() string
-	GetPhoneNumber() string
-	GetSocialSecurity() string
+	IBaseModel[interop.User]
+	Save() (IUserModel, error)
+	MatchCredentials(IUserModel) (bool, error)
+	HasAuthenticIdentity() (bool, error)
+	HasAuthorization() (bool, error)
+	GetPassword() string
 }

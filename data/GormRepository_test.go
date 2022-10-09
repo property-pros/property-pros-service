@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"log"
 	"os"
@@ -10,50 +11,31 @@ import (
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	gormMock "github.com/Selvatico/go-mocket"
-	"github.com/jinzhu/gorm"
 	i "github.com/vireocloud/property-pros-service/interfaces"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-func SaveExpectations(model *FakeModel) {
-	sqlDBMocker.ExpectQuery(`^SELECT \* FROM \"fake_models\" WHERE \(ID = \$1\)$`).WithArgs(model.ID).WillReturnRows(sqlmock.NewRows([]string{"ID", "Name", "Value"}))
-
+func InsertExpectations(model *FakeModel) {
 	sqlDBMocker.ExpectBegin()
+	// sqlDBMocker.ExpectQuery(`^SELECT \* FROM \"fake_models\" WHERE \(ID = \$1\)$`).WithArgs(model.ID).WillReturnRows(sqlmock.NewRows([]string{"ID", "Name", "Value"}))
 
-	sqlDBMocker.ExpectQuery(`^INSERT INTO \"fake_models\" \(\"name\"\,\"value\"\) VALUES \(\$1\,\$2\) RETURNING \"fake_models\"\.\"id\"$`).WithArgs(model.Name, model.Value).WillReturnRows(sqlmock.NewRows([]string{"ID"}).AddRow(expectedResult.ID))
+	queryExpectation := sqlDBMocker.ExpectExec(`^INSERT INTO \"fake_models\" \(\"id\",\"name\"\,\"value\"\) VALUES \(\$1\,\$2\,\$3\)$`)
+	// RETURNING \"fake_models\"\.\"id\"
+	queryExpectation.WithArgs(model.GetId(), model.Name, model.Value).WillReturnResult(driver.ResultNoRows) //.NewRows([]string{"id"}).AddRow(expectedResult.ID)
 
 	sqlDBMocker.ExpectCommit()
 }
 
 func TestShouldSaveWithInsert(t *testing.T) {
 
-	model := &FakeModel{ID: 0, Name: "test name", Value: "test value"}
+	payload := &FakeModel{Name: "test name", Value: "test value"}
 
-	SaveExpectations(model)
+	InsertExpectations(payload)
 
 	sqlDBMocker.MatchExpectationsInOrder(true)
 
-	payload, query := repo.GetQueryAndPayload(model)
-
-	if query == nil {
-		t.Error("expected query to not be nil;  recieved nil")
-	}
-
-	if payload == nil {
-		t.Error("expected payload to not be nil;  recieved nil")
-	}
-
-	payloadFakeModel := payload.(*FakeModel)
-	queryFakeModel := query.(*FakeModel)
-
-	if payloadFakeModel.ID != uint32(0) {
-		t.Errorf("expected payload.ID to be 0; recieved %v", payloadFakeModel.ID)
-	}
-
-	if queryFakeModel.ID != uint32(0) {
-		t.Errorf("expected query.ID to be 0; recieved %v", queryFakeModel.ID)
-	}
-
-	result, saveErr := repo.Save(payload, query)
+	concreteResult, saveErr := repo.Save(payload)
 
 	if saveErr != nil {
 		t.Error(saveErr)
@@ -65,10 +47,40 @@ func TestShouldSaveWithInsert(t *testing.T) {
 		t.Error(err)
 	}
 
-	concreteResult, ok := result.(*FakeModel)
+	if concreteResult == nil {
+		t.Error("Expected 1 result from repo.Save.  Recieved nil")
+	}
+}
 
-	if !ok {
-		t.Error("Something went wrong while running repo.Save.  Conversion to *FakeModel failed.")
+func UpdateExpectations(model *FakeModel) {
+	sqlDBMocker.ExpectBegin()
+
+	queryExpectation := sqlDBMocker.ExpectExec(regexp.QuoteMeta(`UPDATE "fake_models" SET "name"=$1,"value"=$2 WHERE "id" = $3`))
+
+	queryExpectation.WithArgs(model.Name, model.Value, model.GetId()).WillReturnResult(driver.RowsAffected(1))
+
+	sqlDBMocker.ExpectCommit()
+}
+
+func TestShouldSaveWithUpdate(t *testing.T) {
+
+	payload := &FakeModel{ID: "test_id", Name: "test name", Value: "test value"}
+	t.Logf("payload: %+#v\n\n", payload)
+	t.Logf("payload.GetId(): %v\n\n", payload.GetId())
+	UpdateExpectations(payload)
+
+	sqlDBMocker.MatchExpectationsInOrder(true)
+
+	concreteResult, saveErr := repo.Save(payload)
+
+	if saveErr != nil {
+		t.Error(saveErr)
+	}
+
+	err := sqlDBMocker.ExpectationsWereMet()
+
+	if err != nil {
+		t.Error(err)
 	}
 
 	if concreteResult == nil {
@@ -78,7 +90,7 @@ func TestShouldSaveWithInsert(t *testing.T) {
 
 func TestShouldQuery(t *testing.T) {
 
-	sqlDBMocker.ExpectQuery(`^SELECT \* FROM \"fake_models\" WHERE \(\"fake_models\"\.\"name\" = \$1\)$`).WithArgs("Test Name").WillReturnRows(sqlRows)
+	sqlDBMocker.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "fake_models" WHERE "fake_models"."name" = $1`)).WithArgs("Test Name").WillReturnRows(sqlRows)
 
 	results := repo.Query(&FakeModel{Name: "Test Name"})
 
@@ -99,7 +111,7 @@ func TestShouldFindOne(t *testing.T) {
 
 	query.ID = expectedResult.ID
 
-	sqlDBMocker.ExpectQuery(`^SELECT \* FROM \"fake_models\" WHERE \(ID \= \$1\)$`).WithArgs(query.ID).WillReturnRows(sqlRows)
+	sqlDBMocker.ExpectQuery(`^SELECT \* FROM \"fake_models\" WHERE \"fake_models\".\"id\" \= \$1$`).WithArgs(query.ID).WillReturnRows(sqlRows)
 
 	repo.FindOne(query)
 
@@ -116,9 +128,7 @@ func TestShouldDelete(t *testing.T) {
 
 	sqlDBMocker.ExpectBegin()
 
-	sqlDBMocker.ExpectExec(regexp.QuoteMeta("DELETE FROM \"fake_models\" WHERE \"fake_models\".\"id\" = $1")).
-		WithArgs(uint64(expectedResult.ID)).
-		WillReturnResult(sqlmock.NewResult(int64(expectedResult.ID), 1))
+	sqlDBMocker.ExpectExec(regexp.QuoteMeta("DELETE FROM \"fake_models\" WHERE \"fake_models\".\"id\" = $1")).WithArgs(string(expectedResult.ID)).WillReturnResult(driver.ResultNoRows)
 
 	sqlDBMocker.ExpectCommit()
 
@@ -137,7 +147,7 @@ func TestShouldDelete(t *testing.T) {
 	}
 }
 
-var repo i.IRepository
+var repo i.IRepository[FakeModel]
 
 var sqlRows *sqlmock.Rows
 
@@ -160,20 +170,23 @@ func TestMain(m *testing.M) {
 
 func setup(m *testing.M) {
 
-	expectedResult = &FakeModel{ID: 1234, Name: "test name", Value: "test value"}
+	expectedResult = &FakeModel{ID: "1234", Name: "test name", Value: "test value"}
 
 	slqmockDbInstance, sqlDBMocker, _ = sqlmock.New()
 
 	sqlRows = sqlmock.NewRows([]string{"ID", "Name", "Value"}).AddRow(expectedResult.ID, expectedResult.Name, expectedResult.Value)
 
 	// GORM
-	db, err := gorm.Open("postgres", slqmockDbInstance) // Could be any connection string
+	// slqmockDbInstance.
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		Conn: slqmockDbInstance,
+	})) // Could be any connection string
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	repo = &GormRepository{
+	repo = &GormRepository[FakeModel, *FakeModel]{
 		db: db,
 	}
 
@@ -192,7 +205,13 @@ func tearDown(m *testing.M) {
 }
 
 type FakeModel struct {
-	ID    uint32
+	ID    string
 	Name  string
 	Value string
 }
+
+func (model *FakeModel) Getcontext() {}
+func (model *FakeModel) GetId() string {
+	return model.ID
+}
+func (model *FakeModel) GetPayload() {}

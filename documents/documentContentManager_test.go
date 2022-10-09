@@ -37,7 +37,9 @@ func TestBuildNotePurchaseAgreement(t *testing.T) {
 	Teardown()
 }
 
-type ClientMock struct{}
+type ClientMock struct {
+	interop.NotePurchaseAgreementServiceClient
+}
 
 func (*ClientMock) GetNotePurchaseAgreementDoc(ctx context.Context, in *interop.GetNotePurchaseAgreementDocRequest, opts ...interop.CallOption) (*interop.GetNotePurchaseAgreementDocResponse, error) {
 	return &interop.GetNotePurchaseAgreementDocResponse{
