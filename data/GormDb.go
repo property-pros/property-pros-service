@@ -16,3 +16,7 @@ func NewGormDatabase() (*gorm.DB, error) {
 
 	return db, nil
 }
+
+func CreateFixtures(string) {
+
+}

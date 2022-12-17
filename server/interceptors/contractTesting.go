@@ -91,7 +91,7 @@ func (c *PropertyProsApiController) SaveNotePurchaseAgreement(ctx context.Contex
 
 func (c *PropertyProsApiController) GetNotePurchaseAgreementDoc(ctx context.Context, req *interop.GetNotePurchaseAgreementDocRequest) (response *interop.GetNotePurchaseAgreementDocResponse, errResult error) {
 	return &interop.GetNotePurchaseAgreementDocResponse{
-		FileContent: []byte{},
+		FileContent: []byte("test file content"),
 	}, nil
 }
 

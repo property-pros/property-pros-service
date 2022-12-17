@@ -12,7 +12,7 @@ import (
 
 type NotePurchaseAgreementsControllerTestSuite struct {
 	suite.Suite
-	controller            *PropertyProsApiController
+	controller            *NotePurchaseAgreementController
 	testAgreementsService *MockTestAgreementsService
 	testUserService       interfaces.IUsersService
 }

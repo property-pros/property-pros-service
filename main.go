@@ -13,8 +13,6 @@ import (
 
 	ctx "context"
 	"fmt"
-	"log"
-
 	"github.com/google/wire"
 	"github.com/vireocloud/property-pros-service/agreements"
 	"github.com/vireocloud/property-pros-service/bootstrap"
@@ -26,6 +24,7 @@ import (
 	"github.com/vireocloud/property-pros-service/server/controllers"
 	"github.com/vireocloud/property-pros-service/server/interceptors"
 	"github.com/vireocloud/property-pros-service/users"
+	"log"
 )
 
 func main() {
@@ -48,7 +47,8 @@ var UserSet wire.ProviderSet = wire.NewSet(
 	users.NewUsersGateway,
 	users.NewUserModel,
 	NewUserModelFactory,
-	users.NewUsersService)
+	users.NewUsersService,
+	controllers.NewAuthController)
 
 var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(
 	data.NewAgreementsRepository,

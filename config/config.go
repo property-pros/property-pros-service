@@ -21,6 +21,7 @@ type Config struct {
 	DocumentContentProviderSource string `env:"DOCUMENT_CONTENT_PROVIDER" flag:"document-content-provider" desc:"document provider grpc server address host:port" validate:"required,hostname_port"`
 	ListenAddress                 string `env:"LISTEN_ADDRESS" flag:"listen-address" desc:"grpc server listening address host" validate:"required,ip4_addr"`
 	ListenPort                    string `env:"LISTEN_PORT" flag:"listen-port" desc:"grpc server listening address host:port" validate:"required,number"`
+	AppEnv                        string `env:"APP_ENV" flag:"app-env" desc:"generic flag to describe the runtime environment dev/prod" validate:"required"`
 }
 
 func NewConfig() (*Config, error) {

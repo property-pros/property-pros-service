@@ -2,21 +2,16 @@ package controllers
 
 import (
 	"context"
-	"errors"
 
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
 
 const (
 	GRPC_REGISTRATION_METHOD string = "/notepurchaseagreement.NotePurchaseAgreementService/SaveNotePurchaseAgreement"
-	GRPC_AUTH_METHOD         string = "/auth.AuthenticationService/AuthenticateUser"
 )
 
-type PropertyProsApiController struct {
-	interop.UnimplementedAuthenticationServiceServer
+type NotePurchaseAgreementController struct {
 	interop.UnimplementedNotePurchaseAgreementServiceServer
 
 	authService                  interfaces.IUsersService
@@ -53,39 +48,11 @@ func (c *PropertyProsApiController) GetNotePurchaseAgreementDoc(ctx context.Cont
 	return response, returnErr
 }
 
-func (c *PropertyProsApiController) AuthenticateUser(ctx context.Context, req *interop.AuthenticateUserRequest) (*interop.AuthenticateUserResponse, error) {
-
-	response := &interop.AuthenticateUserResponse{}
-
-	isAuthentic, err := c.authService.AuthenticateUser(ctx, req.Payload)
-
-	if err != nil {
-		return response, err
-	}
-
-	response.Authenticated = isAuthentic
-
-	// We want to extract metadata from the incomming context.
-	// We dont create a new context since we dont wanna overwrite old metadata
-	meta, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, errors.New("could not grab metadata from context")
-	}
-	// Set authorization  metadata for the client to send in subsequent requests
-	meta.Set("authorization", c.authService.GenerateBasicUserAuthToken(req.Payload))
-	// Metadata is sent on its own, so we need to send the header. There is also something called Trailer
-	grpc.SendHeader(ctx, meta)
-
-	return response, nil
-}
-
-func NewNotePurchaseAgreementController(notePurchaseAgreementService interfaces.IAgreementsService, authService interfaces.IUsersService) *PropertyProsApiController {
-	return &PropertyProsApiController{
+func NewNotePurchaseAgreementController(notePurchaseAgreementService interfaces.IAgreementsService, authService interfaces.IUsersService) *NotePurchaseAgreementController {
+	return &NotePurchaseAgreementController{
 		notePurchaseAgreementService: notePurchaseAgreementService,
 		authService:                  authService,
 	}
 }
 
 var _ interop.NotePurchaseAgreementServiceServer = (*PropertyProsApiController)(nil)
-
-var _ interop.AuthenticationServiceServer = (*PropertyProsApiController)(nil)

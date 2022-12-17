@@ -12,7 +12,6 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/omeid/uconfig v1.2.0
 	github.com/stretchr/testify v1.8.0
-	github.com/vireocloud/property-pros-docs v0.0.13
 	github.com/vireocloud/property-pros-sdk v0.0.2
 	golang.org/x/net v0.0.0-20221004154528-8021a29435af
 	google.golang.org/grpc v1.50.0
