@@ -9,12 +9,56 @@ import (
 )
 
 type NotePurchaseAgreementService struct {
-	interfaces.IAgreementsService
-	factory interfaces.INotePurchaseAgreementModelFactory
+	factory                      interfaces.INotePurchaseAgreementModelFactory
+	notePurchaseAgreementGateway interfaces.INotePurchaseAgreementGateway
 }
 
-func (service *NotePurchaseAgreementService) GetNotePurchaseAgreementDocContent(context.Context, *interop.NotePurchaseAgreement) ([]byte, error) {
-	return nil, nil
+func (service *NotePurchaseAgreementService) GetNotePurchaseAgreementDocContent(ctx context.Context, payload interfaces.IModelPayload) ([]byte, error) {
+	model, err := service.GetNotePurchaseAgreementModel(ctx, payload)
+
+	if err != nil {
+		return nil, err
+	}
+
+	model, err = model.LoadDocument()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return model.GetPayload().GetFileContent(), nil
+}
+
+func (service *NotePurchaseAgreementService) GetNotePurchaseAgreementModel(ctx context.Context, payload interfaces.IModelPayload) (interfaces.IAgreementModel, error) {
+
+	model, err := service.factory.NewPurchaseAgreementModel(ctx, payload.(*interop.NotePurchaseAgreement))
+	
+	if err != nil {
+		return nil, err
+	}
+
+	model, err = service.notePurchaseAgreementGateway.FindOne(ctx, model)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return model, nil
+}
+
+func (service *NotePurchaseAgreementService) GetNotePurchaseAgreement(ctx context.Context, payload interfaces.IModelPayload) (*interop.NotePurchaseAgreement, error) {
+
+	model, err := service.GetNotePurchaseAgreementModel(ctx, payload)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return model.GetPayload(), nil
+}
+
+func (service *NotePurchaseAgreementService) GetNotePurchaseAgreements(ctx context.Context) ([]interfaces.IAgreementModel, error) {
+	return service.notePurchaseAgreementGateway.Getall(ctx)
 }
 
 func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement *interop.NotePurchaseAgreement) (*interop.NotePurchaseAgreement, error) {
@@ -39,3 +83,5 @@ func NewNotePurchaseAgreementService(factory interfaces.INotePurchaseAgreementMo
 		factory: factory,
 	}
 }
+
+var _ interfaces.IAgreementsService = (*NotePurchaseAgreementService)(nil)

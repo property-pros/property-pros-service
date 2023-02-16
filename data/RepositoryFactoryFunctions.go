@@ -17,3 +17,10 @@ func NewUsersRepository(db *gorm.DB) interfaces.IUsersRepository {
 func NewAgreementsRepository(db *gorm.DB) interfaces.IAgreementsRepository {
 	return NewRepository[interop.NotePurchaseAgreement](db)
 }
+
+// func NewDocumentsRepository(db *gorm.DB) interfaces.IAgreementsRepository {
+// 	return NewRepository[interop.Document](db)
+// }
+func NewStatementsRepository(db *gorm.DB) interfaces.IStatementsRepository {
+	return NewRepository[interop.Statement](db)
+}

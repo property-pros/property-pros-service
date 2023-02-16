@@ -1,16 +1,15 @@
 package agreements
 
 import (
-	"log"
-
 	"github.com/vireocloud/property-pros-service/common"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
 )
 
 type NotePurchaseAgreementModel struct {
-	*interop.NotePurchaseAgreement
 	*common.BaseModel[interop.NotePurchaseAgreement]
+
+	UserId string `json:"userid" bson:"userid"`
 	documentContentService       interfaces.IDocumentContentService
 	notePurchaseAgreementGateway interfaces.INotePurchaseAgreementGateway
 	userService                  interfaces.IUsersService
@@ -20,12 +19,11 @@ func (notePurchaseAgreement *NotePurchaseAgreementModel) Save() (interfaces.IAgr
 	// docChannel := make(chan interfaces.IDocumentContent)
 	// userChannel := make(chan interfaces.IUserModel)
 
-	if exists, err := notePurchaseAgreement.DoesExist(); err == nil && !exists {
-		// go notePurchaseAgreement.GenerateDocument(docChannel)
-	} else {
-		// close(docChannel)
-		return interfaces.IAgreementModel(notePurchaseAgreement), err
-	}
+	// if exists, err := notePurchaseAgreement.DoesExist(); err == nil && !exists {
+	// 	go notePurchaseAgreement.GenerateDocument(docChannel)
+	// } else {
+	// 	close(docChannel)
+	// }
 
 	go notePurchaseAgreement.SaveUser(nil)
 	go notePurchaseAgreement.SaveNotePurchaseAgreement(nil)
@@ -33,6 +31,19 @@ func (notePurchaseAgreement *NotePurchaseAgreementModel) Save() (interfaces.IAgr
 	return notePurchaseAgreement, nil
 }
 
+func (notePurchaseAgreement *NotePurchaseAgreementModel) LoadDocument() (interfaces.IAgreementModel, error) {
+	result := *notePurchaseAgreement
+
+	docContent, err := result.GenerateDocument(nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	result.GetPayload().FileContent = docContent.GetDocContent()
+
+	return &result, nil
+}
 // func (notePurchaseAgreement *NotePurchaseAgreementModel) GetContext() context.Context {
 // 	return notePurchaseAgreement.BaseModel.GetContext()
 // }
@@ -50,7 +61,9 @@ func (notePurchaseAgreement *NotePurchaseAgreementModel) GenerateDocument(result
 		return nil, err
 	}
 
-	resultChannel <- result
+	if resultChannel != nil {
+		resultChannel <- result
+	}
 
 	return result, nil
 }
@@ -110,10 +123,11 @@ func (agreement *NotePurchaseAgreementModel) GetPassword() string {
 }
 
 func (agreement *NotePurchaseAgreementModel) GetUserPayload() *interop.User {
-	return &interop.User{
-		EmailAddress: agreement.GetEmailAddress(),
-		Password:     agreement.GetPassword(),
-	}
+	return agreement.GetPayload().User
+}
+
+func (agreement *NotePurchaseAgreementModel) GetId() string {
+	return agreement.GetPayload().Id
 }
 
 func NewNotePurchaseAgreementModel(
@@ -121,7 +135,7 @@ func NewNotePurchaseAgreementModel(
 	notePurchaseAgreementGateway interfaces.INotePurchaseAgreementGateway,
 	userService interfaces.IUsersService,
 ) *NotePurchaseAgreementModel {
-	log.Printf("building note purchase agreement model; documentservice: %+#v\n\n", documentContentService)
+	
 	return &NotePurchaseAgreementModel{
 		documentContentService:       documentContentService,
 		notePurchaseAgreementGateway: notePurchaseAgreementGateway,

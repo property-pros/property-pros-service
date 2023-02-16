@@ -21,15 +21,14 @@ func TestNotPurchaseAgreementsControllerSuite(t *testing.T) {
 	suite.Run(t, new(NotePurchaseAgreementsControllerTestSuite))
 }
 
-func (suite *NotePurchaseAgreementsControllerTestSuite) TestGetNotePurchaseAgreementDoc() {
+func (suite *NotePurchaseAgreementsControllerTestSuite) TestGetNotePurchaseAgreemen() {
 	t := suite.T()
 	testDocContent := []byte("test doc")
 	suite.testAgreementsService.On("GetNotePurchaseAgreementDocContent").Return(testDocContent, nil)
 
 	result, err := suite.controller.GetNotePurchaseAgreementDoc(context.TODO(), &interop.GetNotePurchaseAgreementDocRequest{
 		Payload: &interop.NotePurchaseAgreement{
-			FirstName: "John",
-			LastName:  "smith",
+			Id: "test",
 		},
 	})
 
@@ -53,10 +52,22 @@ type MockTestAgreementsService struct {
 	mock.Mock
 }
 
-func (mock *MockTestAgreementsService) GetNotePurchaseAgreementDocContent(context.Context, *interop.NotePurchaseAgreement) ([]byte, error) {
+func (mock *MockTestAgreementsService) GetNotePurchaseAgreementDocContent(context.Context, interfaces.IModelPayload) ([]byte, error) {
 	args := mock.Called()
 
 	return args.Get(0).([]byte), args.Error(1)
+}
+
+func (mock *MockTestAgreementsService) GetNotePurchaseAgreement(context.Context, interfaces.IModelPayload) (*interop.NotePurchaseAgreement, error) {
+	args := mock.Called()
+
+	return args.Get(0).(*interop.NotePurchaseAgreement), args.Error(1)
+}
+
+func (mock *MockTestAgreementsService) GetNotePurchaseAgreements(context.Context) ([]interfaces.IAgreementModel, error) {
+	args := mock.Called()
+
+	return args.Get(0).([]interfaces.IAgreementModel), args.Error(1)
 }
 
 func (mock *MockTestAgreementsService) Save(context.Context, *interop.NotePurchaseAgreement) (*interop.NotePurchaseAgreement, error) {

@@ -8,12 +8,11 @@ import (
 
 	_ "gorm.io/driver/postgres"
 
-	"github.com/vireocloud/property-pros-service/interfaces"
 	i "github.com/vireocloud/property-pros-service/interfaces"
 )
 
 type RepositoryModelConstraint[T any] interface {
-	interfaces.IModelPayload
+	i.IModelPayload
 	*T
 }
 
@@ -103,7 +102,7 @@ func (repo *GormRepository[T, PT]) Delete(query *T) (*T, error) {
 	return query, nil
 }
 
-func NewGormRepository[T any, PT RepositoryModelConstraint[T]](db *gorm.DB) interfaces.IRepository[T] {
+func NewGormRepository[T any, PT RepositoryModelConstraint[T]](db *gorm.DB) i.IRepository[T] {
 	return &GormRepository[T, PT]{
 		db: db,
 	}

@@ -26,7 +26,7 @@ func NewAuthValidationInterceptor(authService interfaces.IUsersService, authMeth
 }
 
 func (validator *AuthValidationInterceptor) Validate(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-
+	fmt.Printf("full method: %v; registration method: %v; auth method: %v", info.FullMethod, validator.registrationMethod, validator.authMethod)
 	if info.FullMethod != validator.registrationMethod && info.FullMethod != validator.authMethod {
 		md, ok := metadata.FromIncomingContext(ctx)
 

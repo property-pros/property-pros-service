@@ -7,14 +7,14 @@ require (
 	github.com/Selvatico/go-mocket v1.0.7
 	github.com/go-playground/validator/v10 v10.2.0
 	github.com/google/uuid v1.1.2
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.3
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.0
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/joho/godotenv v1.4.0
-	github.com/omeid/uconfig v1.2.0
+	github.com/omeid/uconfig v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.8.0
-	github.com/vireocloud/property-pros-sdk v0.0.2
-	golang.org/x/net v0.0.0-20221004154528-8021a29435af
-	google.golang.org/grpc v1.50.0
+	github.com/vireocloud/property-pros-sdk v0.0.17
+	golang.org/x/net v0.3.0
+	google.golang.org/grpc v1.51.0
 	gorm.io/driver/postgres v1.3.8
 	gorm.io/gorm v1.23.8
 )
@@ -50,9 +50,13 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/klauspost/compress v1.15.11 // indirect
 	github.com/rs/cors v1.8.2 // indirect
-	golang.org/x/sys v0.0.0-20221006211917-84dc82d7e875 // indirect
-	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/genproto v0.0.0-20220930163606-c98284e70a91 // indirect
+	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/text v0.5.0 // indirect
+	google.golang.org/genproto v0.0.0-20221207170731-23e4bf6bdc37 // indirect
 	google.golang.org/protobuf v1.28.1
 	nhooyr.io/websocket v1.8.7 // indirect
 )
+
+replace github.com/omeid/uconfig => github.com/vireocloud/uconfig v0.4.0
+
+// replace github.com/vireocloud/property-pros-sdk => ../property-pros-sdk

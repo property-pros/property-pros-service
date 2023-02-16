@@ -7,13 +7,15 @@ import (
 	"github.com/vireocloud/property-pros-service/interop"
 )
 
-type DocumentContentServiceGrpc struct {
+type DocumentContentService struct {
 	interfaces.IDocumentContentService
-	notePurchaseAgreementServiceClient interop.NotePurchaseAgreementServiceClient
+	notePurchaseAgreementServiceDocClient interop.NotePurchaseAgreementServiceClient
+
+	// documentGateway interfaces.IDocumentGateway
 }
 
-func (docs *DocumentContentServiceGrpc) BuildNotePurchaseAgreement(ctx context.Context, payload *interop.NotePurchaseAgreement) (interfaces.IDocumentContent, error) {
-	documentResult, err := docs.notePurchaseAgreementServiceClient.GetNotePurchaseAgreementDoc(ctx, &interop.GetNotePurchaseAgreementDocRequest{
+func (docs *DocumentContentService) BuildNotePurchaseAgreement(ctx context.Context, payload *interop.NotePurchaseAgreement) (interfaces.IDocumentContent, error) {
+	documentResult, err := docs.notePurchaseAgreementServiceDocClient.GetNotePurchaseAgreementDoc(ctx, &interop.GetNotePurchaseAgreementDocRequest{
 		Payload: payload,
 	})
 
@@ -26,13 +28,13 @@ func (docs *DocumentContentServiceGrpc) BuildNotePurchaseAgreement(ctx context.C
 	}, nil
 }
 
-func (docs *DocumentContentServiceGrpc) BuildAccountStatement() {
+func (docs *DocumentContentService) BuildAccountStatement() {
 
 }
 
 func NewDocumentContentManager(client interop.NotePurchaseAgreementServiceClient) interfaces.IDocumentContentService {
 
-	return &DocumentContentServiceGrpc{
-		notePurchaseAgreementServiceClient: client,
+	return &DocumentContentService{
+		notePurchaseAgreementServiceDocClient: client,
 	}
 }

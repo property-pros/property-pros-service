@@ -1,21 +1,16 @@
-//go:build wireinject
-// +build wireinject
-
 //go:generate go run ./build/gen_accessors.go -v
 
 package main
 
 // generate getters and setters with https://github.com/masaushi/accessory
 import (
-
-	// controllers "github.com/vireocloud/property-pros-service/server/controllers"
-	// "github.com/vireocloud/property-pros-service/server/third_party"
-
 	ctx "context"
 	"fmt"
+
 	"github.com/google/wire"
 	"github.com/vireocloud/property-pros-service/agreements"
 	"github.com/vireocloud/property-pros-service/bootstrap"
+	"github.com/vireocloud/property-pros-service/common"
 	"github.com/vireocloud/property-pros-service/config"
 	"github.com/vireocloud/property-pros-service/data"
 	"github.com/vireocloud/property-pros-service/documents"
@@ -24,7 +19,6 @@ import (
 	"github.com/vireocloud/property-pros-service/server/controllers"
 	"github.com/vireocloud/property-pros-service/server/interceptors"
 	"github.com/vireocloud/property-pros-service/users"
-	"log"
 )
 
 func main() {
@@ -61,6 +55,17 @@ var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(
 	agreements.NewNotePurchaseAgreementService,
 	controllers.NewNotePurchaseAgreementController)
 
+var StatementSet wire.ProviderSet = wire.NewSet(
+	data.NewStatementsRepository,
+	// agreements.NewNotePurchaseAgreementGateway,
+	// agreements.NewNotePurchaseAgreementModel,
+	// NewNotePurchaseAgreementModelFactory,
+	// bootstrap.NewGrpcConnection,
+	// bootstrap.NewNotePurchaseAgreementClient,
+	// documents.NewDocumentContentManager,
+	// agreements.NewNotePurchaseAgreementService,
+	controllers.NewNotePurchaseAgreementController)
+
 func Bootstrap() (*bootstrap.App, error) {
 
 	wire.Build(
@@ -86,13 +91,14 @@ type Factory struct {
 
 func (factory *Factory) NewPurchaseAgreementModel(context ctx.Context, agreement *interop.NotePurchaseAgreement) (interfaces.IAgreementModel, error) {
 	agreementModel, err := NotePurchaseAgreementInitializer()
-	log.Printf("new agreement model: %+#v", agreementModel)
+	
 	if err != nil {
 		return nil, err
 	}
 
-	agreementModel.Context = context
-	agreementModel.Payload = agreement
+	agreementModel.BaseModel = common.NewBaseModel[interop.NotePurchaseAgreement](agreement, context)
+	agreementModel.SetContext(context)
+	agreementModel.SetPayload(agreement)
 
 	return agreementModel, err
 }

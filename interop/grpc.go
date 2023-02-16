@@ -1,19 +1,32 @@
 package interop
 
 import (
-	propertyProsAuthApi "github.com/vireocloud/property-pros-sdk/generated/auth"
-	propertyProsAgreementApi "github.com/vireocloud/property-pros-sdk/generated/notepurchaseagreement"
+	propertyProsAuthApi "github.com/vireocloud/property-pros-sdk/api/auth/v1"
+	apiCommon "github.com/vireocloud/property-pros-sdk/api/common/v1"
+	propertyProsAgreementApi "github.com/vireocloud/property-pros-sdk/api/note_purchase_agreement/v1"
+	propertyProsStatementApi "github.com/vireocloud/property-pros-sdk/api/statement/v1"
 	"google.golang.org/grpc"
 )
 
+//note purchase agreements
 type UnsafeNotePurchaseAgreementServiceServer = propertyProsAgreementApi.UnsafeNotePurchaseAgreementServiceServer
 type UnimplementedNotePurchaseAgreementServiceServer = propertyProsAgreementApi.UnimplementedNotePurchaseAgreementServiceServer
 type NotePurchaseAgreementServiceServer = propertyProsAgreementApi.NotePurchaseAgreementServiceServer
 
-type NotePurchaseAgreement = propertyProsAgreementApi.NotePurchaseAgreement
+type RecordRequestPayload = apiCommon.RecordRequestPayload
+type RecordResultPayload = apiCommon.RecordResultPayload
+type RecordColection = apiCommon.RecordCollection
+
+type NotePurchaseAgreement = propertyProsAgreementApi.NotePurchaseAgreementRecord
 
 type SaveNotePurchaseAgreementRequest = propertyProsAgreementApi.SaveNotePurchaseAgreementRequest
 type SaveNotePurchaseAgreementResponse = propertyProsAgreementApi.SaveNotePurchaseAgreementResponse
+
+type GetNotePurchaseAgreementRequest = propertyProsAgreementApi.GetNotePurchaseAgreementRequest
+type GetNotePurchaseAgreementResponse = propertyProsAgreementApi.GetNotePurchaseAgreementResponse
+
+type GetNotePurchaseAgreementsRequest = propertyProsAgreementApi.GetNotePurchaseAgreementsRequest
+type GetNotePurchaseAgreementsResponse = propertyProsAgreementApi.GetNotePurchaseAgreementsResponse
 
 type GetNotePurchaseAgreementDocRequest = propertyProsAgreementApi.GetNotePurchaseAgreementDocRequest
 type GetNotePurchaseAgreementDocResponse = propertyProsAgreementApi.GetNotePurchaseAgreementDocResponse
@@ -26,7 +39,7 @@ var RegisterNotePurchaseAgreementServiceHandlerFromEndpoint = propertyProsAgreem
 var RegisterNotePurchaseAgreementServiceServer = propertyProsAgreementApi.RegisterNotePurchaseAgreementServiceServer
 var RegisterNotePurchaseAgreementServiceHandler = propertyProsAgreementApi.RegisterNotePurchaseAgreementServiceHandler
 
-//auth
+// auth
 type AuthenticationServiceServer = propertyProsAuthApi.AuthenticationServiceServer
 type UnsafeAuthenticationServiceServer = propertyProsAuthApi.UnsafeAuthenticationServiceServer
 type UnimplementedAuthenticationServiceServer = propertyProsAuthApi.UnimplementedAuthenticationServiceServer
@@ -41,5 +54,21 @@ var NewAuthenticationServiceClient = propertyProsAuthApi.NewAuthenticationServic
 
 var RegisterAuthenticationServiceHandlerFromEndpoint = propertyProsAuthApi.RegisterAuthenticationServiceHandlerFromEndpoint
 var RegisterAuthenticationServiceServer = propertyProsAuthApi.RegisterAuthenticationServiceServer
+
+//statements
+
+type StatementServiceServer = propertyProsStatementApi.StatementServiceServer
+type UnsafeStatementServiceServer = propertyProsStatementApi.UnsafeStatementServiceServer
+type UnimplementedStatementServiceServer = propertyProsStatementApi.UnimplementedStatementServiceServer
+
+type Statement = propertyProsStatementApi.Statement
+type GetStatementsRequest = propertyProsStatementApi.GetStatementsRequest
+type GetStatementsResponse = propertyProsStatementApi.GetStatementsResponse
+
+type StatementServiceClient = propertyProsStatementApi.StatementServiceClient
+
+var NewStatementServiceClient = propertyProsStatementApi.NewStatementServiceClient
+
+var RegisterStatementServiceHandlerFromEndpoint = propertyProsStatementApi.RegisterStatementServiceHandlerFromEndpoint
 
 type CallOption = grpc.CallOption

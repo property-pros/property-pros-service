@@ -6,17 +6,17 @@ RUN go install github.com/cespare/reflex@latest && \
     go install github.com/google/wire/cmd/wire@latest
 
 ADD ./cicd/id_rsa_shared /root/.ssh/id_rsa
-RUN chmod 700 /root/.ssh/id_rsa
-RUN echo "Host github.com\n\tStrictHostKeyChecking no\n" >> /root/.ssh/config
-RUN git config --global url.ssh://git@github.com/vireocloud.insteadOf https://github.com/vireocloud
+RUN chmod 700 /root/.ssh/id_rsa && \
+    echo "Host github.com\n\tStrictHostKeyChecking no\n" >> /root/.ssh/config && \
+    git config --global url.ssh://git@github.com/vireocloud.insteadOf https://github.com/vireocloud
 
 COPY . /app
 WORKDIR /app
-RUN go clean -modcache
-RUN go get -u github.com/vireocloud/property-pros-sdk
-RUN go install github.com/vireocloud/property-pros-sdk
-RUN go mod tidy 
-RUN go mod download
+RUN go clean -modcache && \
+    export GONOSUMDB="github.com/vireocloud" && \
+    go get github.com/vireocloud/property-pros-sdk && \
+    go mod tidy && \
+    go mod download
 
 COPY reflex.conf /usr/local/etc/
 

@@ -7,4 +7,5 @@ import (
 type IAgreementModel interface {
 	IBaseModel[interop.NotePurchaseAgreement]
 	Save() (IAgreementModel, error)
+	LoadDocument() (IAgreementModel, error)
 }

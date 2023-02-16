@@ -26,5 +26,12 @@ func (model *BaseModel[T]) GetContext() context.Context {
 }
 
 // func (model *BaseModel[T]) GetId() string {
-// 	return PT(model.Payload).GetId()
+// 	return model.Payload.GetId()
 // }
+
+func NewBaseModel[T any](payload *T, context context.Context) *BaseModel[T] {
+	return &BaseModel[T]{
+		Payload: payload,
+		Context: context,
+	}
+}

@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
 	"google.golang.org/grpc"
@@ -85,21 +86,45 @@ type PropertyProsApiController struct {
 
 func (c *PropertyProsApiController) SaveNotePurchaseAgreement(ctx context.Context, req *interop.SaveNotePurchaseAgreementRequest) (response *interop.SaveNotePurchaseAgreementResponse, errResult error) {
 	return &interop.SaveNotePurchaseAgreementResponse{
-		Id: "36c43851-6caa-4c48-962e-0735a6e27e67",
+		Payload: &interop.RecordResultPayload{
+			Id: "36c43851-6caa-4c48-962e-0735a6e27e67",
+		},
 	}, nil
 }
 
 func (c *PropertyProsApiController) GetNotePurchaseAgreementDoc(ctx context.Context, req *interop.GetNotePurchaseAgreementDocRequest) (response *interop.GetNotePurchaseAgreementDocResponse, errResult error) {
 	return &interop.GetNotePurchaseAgreementDocResponse{
-		FileContent: []byte("test file content"),
-	}, nil
+			FileContent: []byte("test file content"),
+		},
+		nil
+}
+
+func (c *PropertyProsApiController) GetNotePurchaseAgreement(ctx context.Context, req *interop.GetNotePurchaseAgreementRequest) (response *interop.GetNotePurchaseAgreementResponse, errResult error) {
+	return &interop.GetNotePurchaseAgreementResponse{
+			Payload: &interop.NotePurchaseAgreement{
+				Id:          uuid.New().String(),
+				FileContent: []byte("test file content"),
+			},
+		},
+		nil
+}
+
+func (c *PropertyProsApiController) GetNotePurchaseAgreements(ctx context.Context, req *interop.GetNotePurchaseAgreementsRequest) (response *interop.GetNotePurchaseAgreementsResponse, errResult error) {
+	return &interop.GetNotePurchaseAgreementsResponse{
+			Payload: &interop.RecordColection{
+				Payload: []*interop.RecordResultPayload{
+					{Id: uuid.New().String()},
+				},
+			},
+		},
+		nil
 }
 
 func (c *PropertyProsApiController) AuthenticateUser(ctx context.Context, req *interop.AuthenticateUserRequest) (*interop.AuthenticateUserResponse, error) {
 
 	response := &interop.AuthenticateUserResponse{}
 
-	response.Authenticated = true
+	response.IsAuthenticated = true
 
 	// We want to extract metadata from the incomming context.
 	// We dont create a new context since we dont wanna overwrite old metadata

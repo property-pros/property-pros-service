@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	GRPC_AUTH_METHOD string = "/auth.AuthenticationService/AuthenticateUser"
+	GRPC_AUTH_METHOD string = "/api.auth.v1.AuthenticationService/AuthenticateUser"
 )
 
 type AuthController struct {
@@ -31,7 +31,7 @@ func (c *AuthController) AuthenticateUser(ctx context.Context, req *interop.Auth
 		return response, err
 	}
 
-	response.Authenticated = isAuthentic
+	response.IsAuthenticated = isAuthentic
 
 	// We want to extract metadata from the incomming context.
 	// We dont create a new context since we dont wanna overwrite old metadata

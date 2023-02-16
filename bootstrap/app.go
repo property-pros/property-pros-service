@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/fs"
-	"io/ioutil"
 	"mime"
 	"net/http"
 	"os"
@@ -36,18 +36,21 @@ var (
 )
 
 type App struct {
-	Config          *config.Config
-	Controller      *controllers.PropertyProsApiController
-	apiInterceptor  *interceptors.AuthValidationInterceptor
-	grpcInterceptor *interceptors.GrpcInterceptor
+	Config                          *config.Config
+	AuthController                  *controllers.AuthController
+	NotePurchaseAgreementController *controllers.NotePurchaseAgreementController
+	apiInterceptor                  *interceptors.AuthValidationInterceptor
+	grpcInterceptor                 *interceptors.GrpcInterceptor
 }
 
-func NewApp(notePurchaseAgreementController *controllers.PropertyProsApiController, configuration *config.Config, grpcInterceptor *interceptors.GrpcInterceptor) *App {
+func NewApp(notePurchaseAgreementController *controllers.NotePurchaseAgreementController, authController *controllers.AuthController, configuration *config.Config, grpcInterceptor *interceptors.GrpcInterceptor, authInterceptor *interceptors.AuthValidationInterceptor) *App {
 
 	return &App{
-		Controller:      notePurchaseAgreementController,
-		Config:          configuration,
-		grpcInterceptor: grpcInterceptor,
+		AuthController:                  authController,
+		NotePurchaseAgreementController: notePurchaseAgreementController,
+		Config:                          configuration,
+		grpcInterceptor:                 grpcInterceptor,
+		apiInterceptor:                  authInterceptor,
 	}
 }
 
@@ -55,7 +58,7 @@ func (a *App) Run() error {
 	// controllers.chill()
 	flag.Parse()
 	// Adds gRPC internal logs. This is quite verbose, so adjust as desired!
-	log := grpclog.NewLoggerV2(os.Stdout, ioutil.Discard, ioutil.Discard)
+	log := grpclog.NewLoggerV2(os.Stdout, io.Discard, io.Discard)
 	grpclog.SetLoggerV2(log)
 
 	if *enableTls {
@@ -69,6 +72,7 @@ func (a *App) Run() error {
 
 		grpcServer := grpc.NewServer(
 			grpc.UnaryInterceptor(a.grpcInterceptor.HandleRequest),
+			grpc.UnaryInterceptor(a.apiInterceptor.Validate),
 		)
 
 		wrappedServer := grpcweb.WrapServer(grpcServer)
@@ -122,8 +126,8 @@ func (*App) LogAvailableGrpcMethods(grpcServer *grpc.Server) error {
 }
 
 func (a *App) registerControllers(grpcServer *grpc.Server, ctx context.Context, gwmux *runtime.ServeMux, dialUrl string, dopts []grpc.DialOption) error {
-	interop.RegisterNotePurchaseAgreementServiceServer(grpcServer, a.Controller)
-	interop.RegisterAuthenticationServiceServer(grpcServer, a.Controller)
+	interop.RegisterNotePurchaseAgreementServiceServer(grpcServer, a.NotePurchaseAgreementController)
+	interop.RegisterAuthenticationServiceServer(grpcServer, a.AuthController)
 
 	err := interop.RegisterNotePurchaseAgreementServiceHandlerFromEndpoint(ctx, gwmux, dialUrl, dopts)
 
@@ -199,11 +203,16 @@ func (a *App) StartInsecureServer() error {
 	fmt.Println("dial url: ", dialUrl)
 	var err error
 	go (func(grpcServer *grpc.Server, ctx context.Context, gwmux *runtime.ServeMux, dialUrl string, dopts []grpc.DialOption, returnErr *error) {
-		err := a.registerControllers(grpcServer, ctx, gwmux, dialUrl, dopts)
+
+		err = a.registerControllers(grpcServer, ctx, gwmux, dialUrl, dopts)
 
 		if err != nil {
 			fmt.Println("registerControllers failed: ", err)
-			returnErr = &err
+
+			if returnErr != nil {
+				returnErr = &err
+			}
+
 			cancel()
 		}
 
@@ -227,7 +236,7 @@ func (a *App) StartInsecureServer() error {
 
 	wg.Wait()
 
-	return nil
+	return err
 }
 
 func getOpenAPIHandler() http.Handler {

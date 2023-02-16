@@ -33,14 +33,19 @@ func (suite *NotePurchaseAgreementTestSuite) SetupTest() {
 		Context: context.TODO(),
 		Payload: new(interop.NotePurchaseAgreement),
 	}
+
 	suite.documentContentService = new(MockDocumentContentService)
 	suite.testDocumentContent = new(MockDocumentContent)
 	suite.notePurchaseAgreementGateway = new(MockNotePurchaseAgreementGateway)
 	suite.userService = new(MockUserService)
 	suite.testUserModel = &MockUserModel{}
 	suite.testUserPayload = new(interop.User)
+
+	suite.baseModel.Payload.User = suite.testUserPayload
+
 	suite.testNotePurchaseAgreementModel = &NotePurchaseAgreementModel{
 		BaseModel:                    suite.baseModel,
+		NotePurchaseAgreement:        suite.baseModel.Payload,
 		documentContentService:       suite.documentContentService,
 		userService:                  suite.userService,
 		notePurchaseAgreementGateway: suite.notePurchaseAgreementGateway,

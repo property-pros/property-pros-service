@@ -4,8 +4,8 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"io/fs"
-	"io/ioutil"
 	"mime"
 	"net/http"
 	"os"
@@ -36,7 +36,7 @@ func getOpenAPIHandler() http.Handler {
 // Run runs the gRPC-Gateway, dialling the provided address.
 func Run(dialAddr string, enableTls *bool) error {
 	// Adds gRPC internal logs. This is quite verbose, so adjust as desired!
-	log := grpclog.NewLoggerV2(os.Stdout, ioutil.Discard, ioutil.Discard)
+	log := grpclog.NewLoggerV2(os.Stdout, io.Discard, io.Discard)
 	grpclog.SetLoggerV2(log)
 
 	dialOptions := []grpc.DialOption{}
@@ -46,7 +46,6 @@ func Run(dialAddr string, enableTls *bool) error {
 	} else {
 		// dialOptions = append(dialOptions, grpc.WithInsecure())
 		grpclog.Infoln("insecure credentials")
-		dialOptions = append(dialOptions, grpc.WithInsecure())
 		dialOptions = append(dialOptions, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 
