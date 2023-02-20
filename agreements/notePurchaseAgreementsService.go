@@ -92,18 +92,9 @@ func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement
 	}
 
 	_, err = service.notePurchaseAgreementGateway.SaveNotePurchaseAgreement(ctx, agreementModelData)
-
-	// agreementModelData := service.notePurchaseAgreementGateway.SaveNotePurchaseAgreement()
-
 	if err != nil {
 		return nil, err
 	}
-
-	// result, err := agreementModel.Save()
-
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	return agreement, nil
 }
