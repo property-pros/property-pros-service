@@ -1,6 +1,8 @@
 package data
 
 import (
+	"fmt"
+
 	"gorm.io/gorm"
 	//according to gorm docs, this import is necessary
 	"errors"
@@ -28,13 +30,17 @@ func (repo *GormRepository[T, PT]) SetDb(db *gorm.DB) {
 }
 
 func (repo *GormRepository[T, PT]) Save(payload *T) (*T, error) {
-
+	fmt.Println("save repo called")
 	var model *T = payload
+	fmt.Println(model)
 
 	modelResult := repo.db.Debug().Model(payload)
-
+	fmt.Println("statement")
+	fmt.Printf("%v", modelResult)
+	// err := modelResult.Create()
 	err := modelResult.Save(model).Error
-
+	fmt.Println("err, model")
+	fmt.Println(err, model)
 	return model, err
 
 }

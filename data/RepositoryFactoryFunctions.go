@@ -10,12 +10,12 @@ func NewRepository[T any, PT RepositoryModelConstraint[T]](db *gorm.DB) interfac
 	return NewGormRepository[T, PT](db)
 }
 
-func NewUsersRepository(db *gorm.DB) interfaces.IUsersRepository {
-	return NewRepository[interop.User](db)
+func NewUsersRepository(db *gorm.DB) interfaces.IRepository[User] {
+	return NewRepository[User](db)
 }
 
-func NewAgreementsRepository(db *gorm.DB) interfaces.IAgreementsRepository {
-	return NewRepository[interop.NotePurchaseAgreement](db)
+func NewAgreementsRepository(db *gorm.DB) interfaces.IRepository[NotePurchaseAgreement] {
+	return NewRepository[NotePurchaseAgreement](db)
 }
 
 // func NewDocumentsRepository(db *gorm.DB) interfaces.IAgreementsRepository {

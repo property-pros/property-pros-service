@@ -1,15 +1,28 @@
 package agreements
 
 import (
+	"github.com/google/uuid"
 	"github.com/vireocloud/property-pros-service/common"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
+	"github.com/vireocloud/property-pros-service/users"
 )
 
 type NotePurchaseAgreementModel struct {
 	*common.BaseModel[interop.NotePurchaseAgreement]
+	Id             string          `json:"id,omitempty"`
+	FirstName      string          `json:"first_name,omitempty"`
+	LastName       string          `json:"last_name,omitempty"`
+	DateOfBirth    string          `json:"date_of_birth,omitempty"`
+	HomeAddress    string          `json:"home_address,omitempty"`
+	User           users.UserModel `json:"user,omitempty" gorm:"foreignKey:UserId;references:Id"`
+	PhoneNumber    string          `json:"phone_number,omitempty"`
+	SocialSecurity string          `json:"social_security,omitempty"`
+	FundsCommitted uint64          `json:"funds_committed,omitempty"`
+	FileContent    []byte          `json:"file_content,omitempty"`
+	CreatedOn      string          `json:"created_on,omitempty"`
 
-	UserId string `json:"userid" bson:"userid"`
+	UserId                       string `json:"userid" bson:"userid"`
 	documentContentService       interfaces.IDocumentContentService
 	notePurchaseAgreementGateway interfaces.INotePurchaseAgreementGateway
 	userService                  interfaces.IUsersService
@@ -24,9 +37,11 @@ func (notePurchaseAgreement *NotePurchaseAgreementModel) Save() (interfaces.IAgr
 	// } else {
 	// 	close(docChannel)
 	// }
-
+	userIdString := uuid.New().String()
+	notePurchaseAgreement.User.Id = userIdString
+	notePurchaseAgreement.UserId = userIdString
 	go notePurchaseAgreement.SaveUser(nil)
-	go notePurchaseAgreement.SaveNotePurchaseAgreement(nil)
+	// go notePurchaseAgreement.SaveNotePurchaseAgreement(nil)
 
 	return notePurchaseAgreement, nil
 }
@@ -44,6 +59,7 @@ func (notePurchaseAgreement *NotePurchaseAgreementModel) LoadDocument() (interfa
 
 	return &result, nil
 }
+
 // func (notePurchaseAgreement *NotePurchaseAgreementModel) GetContext() context.Context {
 // 	return notePurchaseAgreement.BaseModel.GetContext()
 // }
@@ -135,7 +151,7 @@ func NewNotePurchaseAgreementModel(
 	notePurchaseAgreementGateway interfaces.INotePurchaseAgreementGateway,
 	userService interfaces.IUsersService,
 ) *NotePurchaseAgreementModel {
-	
+
 	return &NotePurchaseAgreementModel{
 		documentContentService:       documentContentService,
 		notePurchaseAgreementGateway: notePurchaseAgreementGateway,

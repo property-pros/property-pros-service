@@ -18,6 +18,7 @@ import (
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
+	"gorm.io/gorm"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
@@ -36,6 +37,7 @@ var (
 )
 
 type App struct {
+	Db                              *gorm.DB
 	Config                          *config.Config
 	AuthController                  *controllers.AuthController
 	NotePurchaseAgreementController *controllers.NotePurchaseAgreementController

@@ -16,46 +16,54 @@ type UsersService struct {
 }
 
 func (service *UsersService) SaveUser(ctx context.Context, user *interop.User) (*interop.User, error) {
-	model, err := service.factory.NewUserModel(ctx, user)
+	// fmt.Println("user")
+	// fmt.Println(user)
+	// fmt.Printf("userModelFactory %v\n", service.factory)
+	// fmt.Printf("ctx %v\n", ctx)
+	
+	// model, err := service.factory.NewUserModel(ctx, user)
+        
+	// if err != nil {
+	// 	fmt.Printf("%v error in SaveUser userService", err)
+	// 	return nil, err
+	// }
+	// fmt.Println("saving user")
+	// fmt.Printf("%v\n", model)
+	// model, err = model.Save()
 
-	if err != nil {
-		return nil, err
-	}
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	model, err = model.Save()
-
-	if err != nil {
-		return nil, err
-	}
-
-	return model.GetPayload(), nil
+	return user, nil
 }
 
 func (service *UsersService) AuthenticateUser(ctx context.Context, user *interop.User) (bool, error) {
-	return false, nil
-	model, err := service.factory.NewUserModel(ctx, user)
-
-	if err != nil {
-		return false, err
-	}
-
-	isAuthenticIdentity, err := model.HasAuthenticIdentity()
-
-	if err != nil {
-		return false, err
-	}
-
-	if isAuthenticIdentity {
-		isAuthorizedIdentity, err := model.HasAuthorization()
-
-		if err != nil {
-			return false, err
-		}
-
-		return isAuthorizedIdentity, nil
-	}
 
 	return false, nil
+	// // model, err := service.factory.NewUserModel(ctx, user)
+
+	// // if err != nil {
+	// // 	return false, err
+	// // }
+
+	// // isAuthenticIdentity, err := model.HasAuthenticIdentity()
+
+	// // if err != nil {
+	// // 	return false, err
+	// // }
+
+	// // if isAuthenticIdentity {
+	// // 	isAuthorizedIdentity, err := model.HasAuthorization()
+
+	// // 	if err != nil {
+	// // 		return false, err
+	// // 	}
+
+	// // 	return isAuthorizedIdentity, nil
+	// // }
+
+	// return false, nil
 }
 
 func (service *UsersService) IsValidToken(ctx context.Context, token string) bool {

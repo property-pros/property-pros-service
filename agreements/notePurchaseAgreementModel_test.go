@@ -45,7 +45,7 @@ func (suite *NotePurchaseAgreementTestSuite) SetupTest() {
 
 	suite.testNotePurchaseAgreementModel = &NotePurchaseAgreementModel{
 		BaseModel:                    suite.baseModel,
-		NotePurchaseAgreement:        suite.baseModel.Payload,
+		notePurchaseAgreement:        suite.baseModel.Payload,
 		documentContentService:       suite.documentContentService,
 		userService:                  suite.userService,
 		notePurchaseAgreementGateway: suite.notePurchaseAgreementGateway,
