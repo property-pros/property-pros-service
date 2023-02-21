@@ -28,15 +28,11 @@ func (repo *GormRepository[T, PT]) SetDb(db *gorm.DB) {
 }
 
 func (repo *GormRepository[T, PT]) Save(payload *T) (*T, error) {
-
 	var model *T = payload
 
 	modelResult := repo.db.Debug().Model(payload)
-
 	err := modelResult.Save(model).Error
-
 	return model, err
-
 }
 
 func (repo *GormRepository[T, PT]) Create(payload *T, query *T) (*T, error) {

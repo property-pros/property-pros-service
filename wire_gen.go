@@ -12,7 +12,6 @@ import (
 	"github.com/google/wire"
 	"github.com/vireocloud/property-pros-service/agreements"
 	"github.com/vireocloud/property-pros-service/bootstrap"
-	"github.com/vireocloud/property-pros-service/common"
 	"github.com/vireocloud/property-pros-service/config"
 	"github.com/vireocloud/property-pros-service/data"
 	"github.com/vireocloud/property-pros-service/documents"
@@ -27,8 +26,16 @@ import (
 
 func Bootstrap() (*bootstrap.App, error) {
 	iNotePurchaseAgreementModelFactory := NewNotePurchaseAgreementModelFactory()
-	iAgreementsService := agreements.NewNotePurchaseAgreementService(iNotePurchaseAgreementModelFactory)
+	db, err := data.NewGormDatabase()
+	if err != nil {
+		return nil, err
+	}
+	iRepository := data.NewAgreementsRepository(db)
+	notePurchaseAgreementGateway := agreements.NewNotePurchaseAgreementGateway(iRepository, iNotePurchaseAgreementModelFactory)
+	interfacesIRepository := data.NewUsersRepository(db)
 	iUserModelFactory := NewUserModelFactory()
+	usersGateway := users.NewUsersGateway(interfacesIRepository, iUserModelFactory)
+	iAgreementsService := agreements.NewNotePurchaseAgreementService(iNotePurchaseAgreementModelFactory, notePurchaseAgreementGateway, usersGateway)
 	iUsersService := users.NewUsersService(iUserModelFactory)
 	notePurchaseAgreementController := controllers.NewNotePurchaseAgreementController(iAgreementsService, iUsersService)
 	authController := controllers.NewAuthController(iAgreementsService, iUsersService)
@@ -45,39 +52,6 @@ func Bootstrap() (*bootstrap.App, error) {
 	grpcInterceptor := interceptors.NewGrpcInterceptor(iUsersService, consumerDrivenContractTestingInterceptor, authValidationInterceptor)
 	app := bootstrap.NewApp(notePurchaseAgreementController, authController, configConfig, grpcInterceptor, authValidationInterceptor)
 	return app, nil
-}
-
-func NotePurchaseAgreementInitializer() (*agreements.NotePurchaseAgreementModel, error) {
-	configConfig, err := config.NewConfig()
-	if err != nil {
-		return nil, err
-	}
-	clientConnInterface := bootstrap.NewGrpcConnection(configConfig)
-	notePurchaseAgreementServiceClient := bootstrap.NewNotePurchaseAgreementClient(clientConnInterface)
-	iDocumentContentService := documents.NewDocumentContentManager(notePurchaseAgreementServiceClient)
-	db, err := data.NewGormDatabase()
-	if err != nil {
-		return nil, err
-	}
-	iAgreementsRepository := data.NewAgreementsRepository(db)
-	iNotePurchaseAgreementModelFactory := NewNotePurchaseAgreementModelFactory()
-	iNotePurchaseAgreementGateway := agreements.NewNotePurchaseAgreementGateway(iAgreementsRepository, iNotePurchaseAgreementModelFactory)
-	iUserModelFactory := NewUserModelFactory()
-	iUsersService := users.NewUsersService(iUserModelFactory)
-	notePurchaseAgreementModel := agreements.NewNotePurchaseAgreementModel(iDocumentContentService, iNotePurchaseAgreementGateway, iUsersService)
-	return notePurchaseAgreementModel, nil
-}
-
-func UserModelInitializer() (*users.UserModel, error) {
-	db, err := data.NewGormDatabase()
-	if err != nil {
-		return nil, err
-	}
-	iUsersRepository := data.NewUsersRepository(db)
-	iUserModelFactory := NewUserModelFactory()
-	iUsersGateway := users.NewUsersGateway(iUsersRepository, iUserModelFactory)
-	userModel := users.NewUserModel(iUsersGateway)
-	return userModel, nil
 }
 
 // main.go:
@@ -99,7 +73,7 @@ func main() {
 
 var UserSet wire.ProviderSet = wire.NewSet(data.NewUsersRepository, users.NewUsersGateway, users.NewUserModel, NewUserModelFactory, users.NewUsersService, controllers.NewAuthController)
 
-var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(data.NewAgreementsRepository, agreements.NewNotePurchaseAgreementGateway, agreements.NewNotePurchaseAgreementModel, NewNotePurchaseAgreementModelFactory, bootstrap.NewGrpcConnection, bootstrap.NewNotePurchaseAgreementClient, documents.NewDocumentContentManager, agreements.NewNotePurchaseAgreementService, controllers.NewNotePurchaseAgreementController)
+var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(data.NewGormDatabase, data.NewAgreementsRepository, NewNotePurchaseAgreementModelFactory, agreements.NewNotePurchaseAgreementGateway, bootstrap.NewGrpcConnection, bootstrap.NewNotePurchaseAgreementClient, documents.NewDocumentContentManager, agreements.NewNotePurchaseAgreementService, controllers.NewNotePurchaseAgreementController)
 
 var StatementSet wire.ProviderSet = wire.NewSet(data.NewStatementsRepository, controllers.NewNotePurchaseAgreementController)
 
@@ -111,17 +85,8 @@ type Factory struct {
 }
 
 func (factory *Factory) NewPurchaseAgreementModel(context2 context.Context, agreement *interop.NotePurchaseAgreement) (interfaces.IAgreementModel, error) {
-	agreementModel, err := NotePurchaseAgreementInitializer()
 
-	if err != nil {
-		return nil, err
-	}
-
-	agreementModel.BaseModel = common.NewBaseModel[interop.NotePurchaseAgreement](agreement, context2)
-	agreementModel.SetContext(context2)
-	agreementModel.SetPayload(agreement)
-
-	return agreementModel, err
+	return &agreements.NotePurchaseAgreementModel{}, nil
 }
 
 func NewNotePurchaseAgreementModelFactory() interfaces.INotePurchaseAgreementModelFactory {
@@ -129,11 +94,8 @@ func NewNotePurchaseAgreementModelFactory() interfaces.INotePurchaseAgreementMod
 }
 
 func (factory *Factory) NewUserModel(context2 context.Context, user *interop.User) (interfaces.IUserModel, error) {
-	userModel, err := UserModelInitializer()
-	userModel.Context = context2
-	userModel.Payload = user
+	return &users.UserModel{}, nil
 
-	return userModel, err
 }
 
 func NewUserModelFactory() interfaces.IUserModelFactory {

@@ -14,6 +14,9 @@ func NewGormDatabase() (*gorm.DB, error) {
 		return nil, err
 	}
 
+	db.AutoMigrate(&User{})
+	db.AutoMigrate(&NotePurchaseAgreement{})
+
 	return db, nil
 }
 

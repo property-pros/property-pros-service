@@ -9,6 +9,9 @@ import (
 	"github.com/vireocloud/property-pros-service/interop"
 )
 
+type UserModel2 struct {
+	gateway interfaces.IUsersGateway
+}
 type UserModel struct {
 	*interop.User
 	*common.BaseModel[interop.User]
@@ -43,5 +46,11 @@ func (model *UserModel) HasAuthorization() (bool, error) {
 }
 
 func NewUserModel(gateway interfaces.IUsersGateway) *UserModel {
-	return &UserModel{gateway: gateway}
+	user := &interop.User{}
+	baseModel := &common.BaseModel[interop.User]{Payload: user, Context: context.Background()}
+	return &UserModel{
+		gateway:   gateway,
+		User:      user,
+		BaseModel: baseModel,
+	}
 }

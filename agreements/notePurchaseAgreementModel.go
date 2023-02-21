@@ -9,7 +9,7 @@ import (
 type NotePurchaseAgreementModel struct {
 	*common.BaseModel[interop.NotePurchaseAgreement]
 
-	UserId string `json:"userid" bson:"userid"`
+	UserId                       string `json:"userid" bson:"userid"`
 	documentContentService       interfaces.IDocumentContentService
 	notePurchaseAgreementGateway interfaces.INotePurchaseAgreementGateway
 	userService                  interfaces.IUsersService
@@ -44,6 +44,7 @@ func (notePurchaseAgreement *NotePurchaseAgreementModel) LoadDocument() (interfa
 
 	return &result, nil
 }
+
 // func (notePurchaseAgreement *NotePurchaseAgreementModel) GetContext() context.Context {
 // 	return notePurchaseAgreement.BaseModel.GetContext()
 // }
@@ -135,7 +136,7 @@ func NewNotePurchaseAgreementModel(
 	notePurchaseAgreementGateway interfaces.INotePurchaseAgreementGateway,
 	userService interfaces.IUsersService,
 ) *NotePurchaseAgreementModel {
-	
+
 	return &NotePurchaseAgreementModel{
 		documentContentService:       documentContentService,
 		notePurchaseAgreementGateway: notePurchaseAgreementGateway,

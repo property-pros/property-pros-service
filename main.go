@@ -10,7 +10,6 @@ import (
 	"github.com/google/wire"
 	"github.com/vireocloud/property-pros-service/agreements"
 	"github.com/vireocloud/property-pros-service/bootstrap"
-	"github.com/vireocloud/property-pros-service/common"
 	"github.com/vireocloud/property-pros-service/config"
 	"github.com/vireocloud/property-pros-service/data"
 	"github.com/vireocloud/property-pros-service/documents"
@@ -27,6 +26,8 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("failed to boostrap application: %w", err))
 	}
+
+	
 
 	err = app.Run()
 
@@ -45,10 +46,11 @@ var UserSet wire.ProviderSet = wire.NewSet(
 	controllers.NewAuthController)
 
 var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(
+	data.NewGormDatabase,
 	data.NewAgreementsRepository,
-	agreements.NewNotePurchaseAgreementGateway,
-	agreements.NewNotePurchaseAgreementModel,
+	// agreements.NewNotePurchaseAgreementModel,
 	NewNotePurchaseAgreementModelFactory,
+	agreements.NewNotePurchaseAgreementGateway,
 	bootstrap.NewGrpcConnection,
 	bootstrap.NewNotePurchaseAgreementClient,
 	documents.NewDocumentContentManager,
@@ -90,48 +92,51 @@ type Factory struct {
 }
 
 func (factory *Factory) NewPurchaseAgreementModel(context ctx.Context, agreement *interop.NotePurchaseAgreement) (interfaces.IAgreementModel, error) {
-	agreementModel, err := NotePurchaseAgreementInitializer()
-	
-	if err != nil {
-		return nil, err
-	}
+	// agreementModel, err := NotePurchaseAgreementInitializer()
+	// fmt.Printf("NewPurchaseAgreementModel: %v\n", agreementModel)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	agreementModel.BaseModel = common.NewBaseModel[interop.NotePurchaseAgreement](agreement, context)
-	agreementModel.SetContext(context)
-	agreementModel.SetPayload(agreement)
+	// agreementModel.BaseModel = common.NewBaseModel[interop.NotePurchaseAgreement](agreement, context)
+	// agreementModel.SetContext(context)
+	// agreementModel.SetPayload(agreement)
 
-	return agreementModel, err
+	return &agreements.NotePurchaseAgreementModel{}, nil
 }
 
 func NewNotePurchaseAgreementModelFactory() interfaces.INotePurchaseAgreementModelFactory {
 	return &Factory{}
 }
 
-func NotePurchaseAgreementInitializer() (*agreements.NotePurchaseAgreementModel, error) {
-	wire.Build(
-		config.NewConfig,
-		data.NewGormDatabase,
-		UserSet,
-		NotePuchaseAgreementSet)
-	return nil, nil
-}
+// func NotePurchaseAgreementInitializer() (*agreements.NotePurchaseAgreementModel, error) {
+// 	wire.Build(
+// 		config.NewConfig,
+// 		data.NewGormDatabase,
+// 		UserSet,
+// 		NotePuchaseAgreementSet)
+// 	return nil, nil
+// }
 
 func (factory *Factory) NewUserModel(context ctx.Context, user *interop.User) (interfaces.IUserModel, error) {
-	userModel, err := UserModelInitializer()
-	userModel.Context = context
-	userModel.Payload = user
+	return &users.UserModel{}, nil
+	// fmt.Println("here in NewUserModel")
+	// userModel, err := UserModelInitializer()
+	// if err != nil {
+	// 	fmt.Printf("error occured: %v\n", err)
+	// 	return nil, err
+	// }
+	// fmt.Println("model initialised")
+	// fmt.Printf("userModel1: %v\n", userModel)
 
-	return userModel, err
+	// userModel.Context = context
+	// userModel.Payload = user
+	// fmt.Printf("userModel: %v\n", userModel)
+	// return userModel, err
 }
 
 func NewUserModelFactory() interfaces.IUserModelFactory {
 	return &Factory{}
 }
 
-func UserModelInitializer() (*users.UserModel, error) {
-	wire.Build(
-		data.NewGormDatabase,
-		UserSet,
-	)
-	return nil, nil
-}
+
