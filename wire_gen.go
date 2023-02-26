@@ -36,7 +36,7 @@ func Bootstrap() (*bootstrap.App, error) {
 	iUserModelFactory := NewUserModelFactory()
 	usersGateway := users.NewUsersGateway(interfacesIRepository, iUserModelFactory)
 	iAgreementsService := agreements.NewNotePurchaseAgreementService(iNotePurchaseAgreementModelFactory, notePurchaseAgreementGateway, usersGateway)
-	iUsersService := users.NewUsersService(iUserModelFactory)
+	iUsersService := users.NewUsersService(usersGateway)
 	notePurchaseAgreementController := controllers.NewNotePurchaseAgreementController(iAgreementsService, iUsersService)
 	authController := controllers.NewAuthController(iAgreementsService, iUsersService)
 	configConfig, err := config.NewConfig()

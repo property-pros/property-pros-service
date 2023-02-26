@@ -61,7 +61,7 @@ func (repo *GormRepository[T, PT]) Update(payload *T, query *T) (*T, error) {
 func (repo *GormRepository[T, PT]) FindOne(payload *T) (*T, error) {
 	results := []*T{}
 
-	err := repo.db.Model(payload).Scan(results).Error
+	err := repo.db.Debug().Model(payload).Scan(&results).Error
 
 	if err != nil {
 		return nil, err

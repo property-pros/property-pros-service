@@ -1,7 +1,7 @@
 package users
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/vireocloud/property-pros-service/data"
 	"github.com/vireocloud/property-pros-service/interfaces"
@@ -12,22 +12,31 @@ type UsersGateway struct {
 	factory interfaces.IUserModelFactory
 }
 
-func (gateway *UsersGateway) GetUserByUsername(user interfaces.IUserModel) (interfaces.IUserModel, error) {
-	return nil, fmt.Errorf("GetUserByUsername Unimplemented")
+func (gateway *UsersGateway) GetUserByUsername(user data.User) (*data.User, error) {
+	// return gateway.repo.Where("email_address = ?", user.EmailAddress)
+	users := gateway.repo.Query(&user)
+	if len(users) == 0 {
+		return nil, errors.New("no user found")
+	}
+
+	return users[0], nil
 }
 
-func (gateway *UsersGateway) SaveUser(user data.User) (data.User, error) {
-	fmt.Println("here in gateway")
+func (gateway *UsersGateway) GetUser(user data.User) (*data.User, error) {
+	return gateway.repo.FindOne(&user)
+}
+
+func (gateway *UsersGateway) SaveUser(user data.User) (*data.User, error) {
 	result, err := gateway.repo.Save(&user)
 
 	if err != nil {
-		return data.User{}, err
+		return nil, err
 	}
 
-	return *result, nil
+	return result, nil
 }
 
-func (gateway *UsersGateway) CreateNewUser(user data.User) (data.User, error) {
+func (gateway *UsersGateway) CreateNewUser(user data.User) (*data.User, error) {
 	return gateway.SaveUser(user)
 }
 

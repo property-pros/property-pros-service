@@ -6,23 +6,19 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/vireocloud/property-pros-service/data"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
 	"google.golang.org/protobuf/proto"
 )
 
 type UsersService struct {
-	factory interfaces.IUserModelFactory
+	userGateway *UsersGateway
 }
 
 func (service *UsersService) SaveUser(ctx context.Context, user *interop.User) (*interop.User, error) {
-	// fmt.Println("user")
-	// fmt.Println(user)
-	// fmt.Printf("userModelFactory %v\n", service.factory)
-	// fmt.Printf("ctx %v\n", ctx)
-	
 	// model, err := service.factory.NewUserModel(ctx, user)
-        
+
 	// if err != nil {
 	// 	fmt.Printf("%v error in SaveUser userService", err)
 	// 	return nil, err
@@ -35,35 +31,22 @@ func (service *UsersService) SaveUser(ctx context.Context, user *interop.User) (
 	// 	return nil, err
 	// }
 
-	return user, nil
+	return &interop.User{}, nil
 }
 
 func (service *UsersService) AuthenticateUser(ctx context.Context, user *interop.User) (bool, error) {
+	usr, err := service.userGateway.GetUserByUsername(data.User{
+		EmailAddress: user.EmailAddress,
+	})
+	if err != nil {
+		return false, err
+	}
 
-	return false, nil
-	// // model, err := service.factory.NewUserModel(ctx, user)
+	if user.Password != usr.Password {
+		return false, nil
+	}
 
-	// // if err != nil {
-	// // 	return false, err
-	// // }
-
-	// // isAuthenticIdentity, err := model.HasAuthenticIdentity()
-
-	// // if err != nil {
-	// // 	return false, err
-	// // }
-
-	// // if isAuthenticIdentity {
-	// // 	isAuthorizedIdentity, err := model.HasAuthorization()
-
-	// // 	if err != nil {
-	// // 		return false, err
-	// // 	}
-
-	// // 	return isAuthorizedIdentity, nil
-	// // }
-
-	// return false, nil
+	return true, nil
 }
 
 func (service *UsersService) IsValidToken(ctx context.Context, token string) bool {
@@ -83,7 +66,7 @@ func (service *UsersService) IsValidToken(ctx context.Context, token string) boo
 
 	isAuthentic, err := service.AuthenticateUser(ctx, payload)
 
-	return err != nil && isAuthentic
+	return err == nil && isAuthentic
 }
 
 func (service *UsersService) GenerateBasicUserAuthToken(user *interop.User) string {
@@ -96,8 +79,8 @@ func (service *UsersService) GenerateBasicUserAuthToken(user *interop.User) stri
 	return fmt.Sprintf("Basic %v", base64.StdEncoding.EncodeToString(authToken))
 }
 
-func NewUsersService(factory interfaces.IUserModelFactory) interfaces.IUsersService {
-	return &UsersService{factory: factory}
+func NewUsersService(userGateway *UsersGateway) interfaces.IUsersService {
+	return &UsersService{userGateway: userGateway}
 }
 
 var _ interfaces.IUsersService = (*UsersService)(nil)

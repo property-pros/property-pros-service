@@ -3,6 +3,7 @@ package agreements
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/vireocloud/property-pros-service/data"
@@ -52,14 +53,33 @@ func (service *NotePurchaseAgreementService) GetNotePurchaseAgreementModel(ctx c
 }
 
 func (service *NotePurchaseAgreementService) GetNotePurchaseAgreement(ctx context.Context, payload interfaces.IModelPayload) (*interop.NotePurchaseAgreement, error) {
+	npaReqModel := data.NotePurchaseAgreement{
+		Id: payload.GetId(),
+	}
 
-	model, err := service.GetNotePurchaseAgreementModel(ctx, payload)
-
+	npa, err := service.notePurchaseAgreementGateway.FindOne(ctx, npaReqModel)
 	if err != nil {
 		return nil, err
 	}
 
-	return model.GetPayload(), nil
+	usr, err := service.userGateway.GetUser(data.User{
+		Id: npa.UserId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &interop.NotePurchaseAgreement{
+		Id:             npa.Id,
+		FirstName:      usr.FirstName,
+		LastName:       usr.LastName,
+		DateOfBirth:    usr.DateOfBirth,
+		HomeAddress:    usr.HomeAddress,
+		PhoneNumber:    usr.PhoneNumber,
+		SocialSecurity: usr.SocialSecurity,
+		FundsCommitted: npa.FundsCommitted,
+		CreatedOn:      npa.CreatedOn,
+	}, nil
 }
 
 func (service *NotePurchaseAgreementService) GetNotePurchaseAgreements(ctx context.Context) ([]interfaces.IAgreementModel, error) {
@@ -77,24 +97,29 @@ func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement
 		HomeAddress:    agreement.GetHomeAddress(),
 		PhoneNumber:    agreement.GetPhoneNumber(),
 		SocialSecurity: agreement.GetSocialSecurity(),
-		CreatedOn:      agreement.GetCreatedOn(),
+		CreatedOn:      time.Now().Format(time.RFC3339),
 	}
 
-	user, err := service.userGateway.SaveUser(userData)
+	user, err := service.userGateway.CreateNewUser(userData)
 	if err != nil {
 		return nil, err
 	}
 
+	newAgreementId := uuid.New().String()
 	agreementModelData := data.NotePurchaseAgreement{
-		Id:             uuid.New().String(),
+		Id:             newAgreementId,
 		FundsCommitted: agreement.FundsCommitted,
 		UserId:         user.Id,
+		CreatedOn:      time.Now().Format(time.RFC3339),
 	}
 
 	_, err = service.notePurchaseAgreementGateway.SaveNotePurchaseAgreement(ctx, agreementModelData)
 	if err != nil {
 		return nil, err
 	}
+
+	agreement.Id = agreementModelData.Id
+	agreement.CreatedOn = agreementModelData.CreatedOn
 
 	return agreement, nil
 }

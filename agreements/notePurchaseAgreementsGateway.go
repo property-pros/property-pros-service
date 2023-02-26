@@ -47,13 +47,6 @@ func (g *NotePurchaseAgreementGateway) Getall(ctx context.Context) ([]interfaces
 	// return models, nil
 }
 
-func (g *NotePurchaseAgreementGateway) FindOne(ctx context.Context, model interfaces.IAgreementModel) (interfaces.IAgreementModel, error) {
-	return nil, nil
-	// result, err := g.repository.FindOne(model.GetPayload())
-
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// return g.factory.NewPurchaseAgreementModel(ctx, result)
+func (g *NotePurchaseAgreementGateway) FindOne(ctx context.Context, model data.NotePurchaseAgreement) (*data.NotePurchaseAgreement, error) {
+	return g.repository.FindOne(&model)
 }

@@ -25,10 +25,10 @@ func notePurchaseAgreementToRecordResult(agreement *interop.NotePurchaseAgreemen
 	}
 }
 
-func notePurchaseAgreementListToRecordCollection(result []interfaces.IAgreementModel) *interop.RecordColection{
-	payload :=[]*interop.RecordResultPayload{}
+func notePurchaseAgreementListToRecordCollection(result []interfaces.IAgreementModel) *interop.RecordColection {
+	payload := []*interop.RecordResultPayload{}
 	recordCollection := &interop.RecordColection{Payload: payload}
-	
+
 	for _, agreement := range result {
 		payload = append(payload, notePurchaseAgreementToRecordResult(agreement.GetPayload()))
 	}

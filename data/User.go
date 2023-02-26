@@ -5,7 +5,7 @@ type User struct {
 	FirstName      string `json:"first_name,omitempty" gorm:"column:first_name"`
 	LastName       string `json:"last_name,omitempty" gorm:"column:last_name"`
 	DateOfBirth    string `json:"date_of_birth,omitempty" gorm:"column:date_of_birth"`
-	EmailAddress   string `json:"email_address,omitempty" gorm:"column:email_address"`
+	EmailAddress   string `json:"email_address,omitempty" gorm:"column:email_address;uniqueIndex:email_address_idx"`
 	Password       string `json:"password,omitempty" gorm:"column:password"`
 	HomeAddress    string `json:"home_address,omitempty" gorm:"column:home_address"`
 	PhoneNumber    string `json:"phone_number,omitempty" gorm:"column:phone_number"`
