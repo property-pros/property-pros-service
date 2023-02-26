@@ -13,7 +13,6 @@ type UsersGateway struct {
 }
 
 func (gateway *UsersGateway) GetUserByUsername(user data.User) (*data.User, error) {
-	// return gateway.repo.Where("email_address = ?", user.EmailAddress)
 	users := gateway.repo.Query(&user)
 	if len(users) == 0 {
 		return nil, errors.New("no user found")
