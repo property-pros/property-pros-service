@@ -2,7 +2,9 @@ package agreements
 
 import (
 	"context"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/vireocloud/property-pros-service/data"
 	"github.com/vireocloud/property-pros-service/interfaces"
 )
@@ -20,8 +22,10 @@ func NewNotePurchaseAgreementGateway(repository interfaces.IRepository[data.Note
 }
 
 func (g *NotePurchaseAgreementGateway) SaveNotePurchaseAgreement(ctx context.Context, agreement data.NotePurchaseAgreement) (data.NotePurchaseAgreement, error) {
-	_, err := g.repository.Save(&agreement)
+	agreement.Id = uuid.New().String()
+	agreement.CreatedOn = time.Now().Format(time.RFC3339)
 
+	_, err := g.repository.Save(&agreement)
 	if err != nil {
 		return data.NotePurchaseAgreement{}, err
 	}

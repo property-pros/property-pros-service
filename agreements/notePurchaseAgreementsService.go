@@ -2,10 +2,9 @@ package agreements
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/vireocloud/property-pros-service/data"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
@@ -88,7 +87,6 @@ func (service *NotePurchaseAgreementService) GetNotePurchaseAgreements(ctx conte
 
 func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement *interop.NotePurchaseAgreement) (*interop.NotePurchaseAgreement, error) {
 	userData := data.User{
-		Id:             uuid.New().String(),
 		FirstName:      agreement.GetFirstName(),
 		LastName:       agreement.GetLastName(),
 		DateOfBirth:    agreement.GetDateOfBirth(),
@@ -97,7 +95,6 @@ func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement
 		HomeAddress:    agreement.GetHomeAddress(),
 		PhoneNumber:    agreement.GetPhoneNumber(),
 		SocialSecurity: agreement.GetSocialSecurity(),
-		CreatedOn:      time.Now().Format(time.RFC3339),
 	}
 
 	user, err := service.userGateway.CreateNewUser(userData)
@@ -105,21 +102,21 @@ func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement
 		return nil, err
 	}
 
-	newAgreementId := uuid.New().String()
+	fmt.Println("gateway user saved")
+	fmt.Printf("%v \n", user)
+
 	agreementModelData := data.NotePurchaseAgreement{
-		Id:             newAgreementId,
 		FundsCommitted: agreement.FundsCommitted,
 		UserId:         user.Id,
-		CreatedOn:      time.Now().Format(time.RFC3339),
 	}
 
-	_, err = service.notePurchaseAgreementGateway.SaveNotePurchaseAgreement(ctx, agreementModelData)
+	agreementSaved, err := service.notePurchaseAgreementGateway.SaveNotePurchaseAgreement(ctx, agreementModelData)
 	if err != nil {
 		return nil, err
 	}
 
-	agreement.Id = agreementModelData.Id
-	agreement.CreatedOn = agreementModelData.CreatedOn
+	agreement.Id = agreementSaved.Id
+	agreement.CreatedOn = agreementSaved.CreatedOn
 
 	return agreement, nil
 }
