@@ -2,7 +2,6 @@ package users
 
 import (
 	"errors"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/vireocloud/property-pros-service/data"
@@ -28,18 +27,11 @@ func (gateway *UsersGateway) GetUser(user data.User) (*data.User, error) {
 }
 
 func (gateway *UsersGateway) SaveUser(user data.User) (*data.User, error) {
-	result, err := gateway.repo.Save(&user)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	return gateway.repo.Save(&user)
 }
 
 func (gateway *UsersGateway) CreateNewUser(user data.User) (*data.User, error) {
 	user.Id = uuid.New().String()
-	user.CreatedOn = time.Now().Format(time.RFC3339)
 
 	return gateway.SaveUser(user)
 }

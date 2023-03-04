@@ -31,11 +31,11 @@ func Bootstrap() (*bootstrap.App, error) {
 		return nil, err
 	}
 	iRepository := data.NewAgreementsRepository(db)
-	notePurchaseAgreementGateway := agreements.NewNotePurchaseAgreementGateway(iRepository, iNotePurchaseAgreementModelFactory)
 	interfacesIRepository := data.NewUsersRepository(db)
+	notePurchaseAgreementGateway := agreements.NewNotePurchaseAgreementGateway(iRepository, interfacesIRepository, iNotePurchaseAgreementModelFactory)
+	iAgreementsService := agreements.NewNotePurchaseAgreementService(iNotePurchaseAgreementModelFactory, notePurchaseAgreementGateway)
 	iUserModelFactory := NewUserModelFactory()
 	usersGateway := users.NewUsersGateway(interfacesIRepository, iUserModelFactory)
-	iAgreementsService := agreements.NewNotePurchaseAgreementService(iNotePurchaseAgreementModelFactory, notePurchaseAgreementGateway, usersGateway)
 	iUsersService := users.NewUsersService(usersGateway)
 	notePurchaseAgreementController := controllers.NewNotePurchaseAgreementController(iAgreementsService, iUsersService)
 	authController := controllers.NewAuthController(iAgreementsService, iUsersService)
