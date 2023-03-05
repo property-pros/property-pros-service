@@ -151,7 +151,6 @@ func (a *App) registerControllers(grpcServer *grpc.Server, ctx context.Context, 
 func grpcHandlerFunc(grpcServer *grpc.Server, grpcWebServer *grpcweb.WrappedGrpcServer, restHandler http.Handler, oa http.Handler) http.Handler {
 
 	return h2c.NewHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("handling request")
 		grpclog.Infof("url: %v\r\n\r\ncontent type: %v\r\n\r\n", r.URL.Path, r.Header.Get("Content-Type"))
 
 		if strings.Contains(r.Header.Get("Content-Type"), "application/grpc-web+proto") {

@@ -4,17 +4,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/google/uuid"
-	"github.com/vireocloud/property-pros-service/data"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
-	"github.com/vireocloud/property-pros-service/users"
 )
 
 type NotePurchaseAgreementService struct {
 	factory                      interfaces.INotePurchaseAgreementModelFactory
 	notePurchaseAgreementGateway *NotePurchaseAgreementGateway
-	userGateway                  *users.UsersGateway
+	usersGateway                 interfaces.IUsersGateway
 }
 
 func (service *NotePurchaseAgreementService) GetNotePurchaseAgreementDocContent(ctx context.Context, payload interfaces.IModelPayload) ([]byte, error) {
@@ -52,14 +49,7 @@ func (service *NotePurchaseAgreementService) GetNotePurchaseAgreementModel(ctx c
 }
 
 func (service *NotePurchaseAgreementService) GetNotePurchaseAgreement(ctx context.Context, payload interfaces.IModelPayload) (*interop.NotePurchaseAgreement, error) {
-
-	model, err := service.GetNotePurchaseAgreementModel(ctx, payload)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return model.GetPayload(), nil
+	return service.notePurchaseAgreementGateway.FindOne(ctx, payload)
 }
 
 func (service *NotePurchaseAgreementService) GetNotePurchaseAgreements(ctx context.Context) ([]interfaces.IAgreementModel, error) {
@@ -67,47 +57,34 @@ func (service *NotePurchaseAgreementService) GetNotePurchaseAgreements(ctx conte
 }
 
 func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement *interop.NotePurchaseAgreement) (*interop.NotePurchaseAgreement, error) {
-	userData := data.User{
-		Id:             uuid.New().String(),
-		FirstName:      agreement.GetFirstName(),
-		LastName:       agreement.GetLastName(),
-		DateOfBirth:    agreement.GetDateOfBirth(),
-		EmailAddress:   agreement.User.GetEmailAddress(),
-		Password:       agreement.User.GetPassword(),
-		HomeAddress:    agreement.GetHomeAddress(),
-		PhoneNumber:    agreement.GetPhoneNumber(),
-		SocialSecurity: agreement.GetSocialSecurity(),
-		CreatedOn:      agreement.GetCreatedOn(),
-	}
 
-	user, err := service.userGateway.SaveUser(userData)
+	user, err := service.usersGateway.SaveUser(ctx, agreement)
+
 	if err != nil {
 		return nil, err
 	}
 
-	agreementModelData := data.NotePurchaseAgreement{
-		Id:             uuid.New().String(),
-		FundsCommitted: agreement.FundsCommitted,
-		UserId:         user.Id,
-	}
+	agreement.User.Id = user.Id
 
-	_, err = service.notePurchaseAgreementGateway.SaveNotePurchaseAgreement(ctx, agreementModelData)
+	resultAgreement, err := service.notePurchaseAgreementGateway.SaveUserAndNotePurchaseAgreement(ctx, agreement)
+
 	if err != nil {
 		return nil, err
 	}
 
-	return agreement, nil
+	resultAgreement.User.Id = user.Id
+
+	return resultAgreement, nil
 }
 
 func NewNotePurchaseAgreementService(
 	factory interfaces.INotePurchaseAgreementModelFactory,
-	npag *NotePurchaseAgreementGateway,
-	ug *users.UsersGateway) interfaces.IAgreementsService {
+	npag *NotePurchaseAgreementGateway, usersGateway interfaces.IUsersGateway) interfaces.IAgreementsService {
 	log.Printf("factory: %+#v \n\n", factory)
 	return &NotePurchaseAgreementService{
 		factory:                      factory,
 		notePurchaseAgreementGateway: npag,
-		userGateway:                  ug,
+		usersGateway:                 usersGateway,
 	}
 }
 
