@@ -11,6 +11,7 @@ import (
 type NotePurchaseAgreementService struct {
 	factory                      interfaces.INotePurchaseAgreementModelFactory
 	notePurchaseAgreementGateway *NotePurchaseAgreementGateway
+	usersGateway                 interfaces.IUsersGateway
 }
 
 func (service *NotePurchaseAgreementService) GetNotePurchaseAgreementDocContent(ctx context.Context, payload interfaces.IModelPayload) ([]byte, error) {
@@ -56,17 +57,34 @@ func (service *NotePurchaseAgreementService) GetNotePurchaseAgreements(ctx conte
 }
 
 func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement *interop.NotePurchaseAgreement) (*interop.NotePurchaseAgreement, error) {
-	return service.notePurchaseAgreementGateway.SaveUserAndNotePurchaseAgreement(ctx, agreement)
 
+	user, err := service.usersGateway.SaveUser(ctx, agreement)
+
+	if err != nil {
+		return nil, err
+	}
+
+	agreement.User.Id = user.Id
+
+	resultAgreement, err := service.notePurchaseAgreementGateway.SaveUserAndNotePurchaseAgreement(ctx, agreement)
+
+	if err != nil {
+		return nil, err
+	}
+
+	resultAgreement.User.Id = user.Id
+
+	return resultAgreement, nil
 }
 
 func NewNotePurchaseAgreementService(
 	factory interfaces.INotePurchaseAgreementModelFactory,
-	npag *NotePurchaseAgreementGateway) interfaces.IAgreementsService {
+	npag *NotePurchaseAgreementGateway, usersGateway interfaces.IUsersGateway) interfaces.IAgreementsService {
 	log.Printf("factory: %+#v \n\n", factory)
 	return &NotePurchaseAgreementService{
 		factory:                      factory,
 		notePurchaseAgreementGateway: npag,
+		usersGateway:                 usersGateway,
 	}
 }
 
