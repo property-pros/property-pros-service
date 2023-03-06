@@ -1,11 +1,8 @@
 package documents
 
-// type StatementsService struct {
+type StatementsService struct {
+}
 
-// }
+func (s *StatementsService) GetStatementsByUser(userId string) {
 
-
-
-// func (s *StatementsService) GetStatementsByUser(string userId){
-
-// }
+}

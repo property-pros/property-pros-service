@@ -20,7 +20,8 @@ type AWSS3Client struct {
 
 func NewClient() interfaces.IDocUploader {
 	sess := session.Must(session.NewSession(&aws.Config{
-		Endpoint:    aws.String("http://localhost:9090"),
+		// TODO: move to config
+		Endpoint:    aws.String("http://s3mock:9090"),
 		Region:      aws.String("us-west-2"),
 		Credentials: credentials.NewStaticCredentials("accessKey", "secretKey", ""),
 	}))
@@ -33,7 +34,6 @@ func NewClient() interfaces.IDocUploader {
 }
 
 func (c *AWSS3Client) PutObject(ctx context.Context, content []byte) (string, error) {
-	fmt.Println("here in put object")
 	newKey := uuid.New().String()
 	input := &s3.PutObjectInput{
 		Bucket: aws.String("documents"),

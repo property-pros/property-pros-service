@@ -13,19 +13,19 @@ type DocumentContentService struct {
 }
 
 func (docs *DocumentContentService) BuildNotePurchaseAgreement(ctx context.Context, payload *interop.NotePurchaseAgreement) (interfaces.IDocumentContent, error) {
-	// TODO: uncomment the below code once notePurchaseServiceClient is implemented
-	documentResult, err := docs.notePurchaseAgreementServiceDocClient.GetNotePurchaseAgreementDoc(ctx, &interop.GetNotePurchaseAgreementDocRequest{
-		Payload: payload,
-	})
+	// TODO: Currently the client errs for unknown reasons, will wait to uncomment it once the doc-service is fixed.
+	// documentResult, err := docs.notePurchaseAgreementServiceDocClient.GetNotePurchaseAgreementDoc(ctx, &interop.GetNotePurchaseAgreementDocRequest{
+	// 	Payload: payload,
+	// })
 
-	if err != nil {
-		return nil, err
-	}
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return &DocumentContent{
-		// DocContent: []byte("dummy result"),
+		DocContent: []byte("dummy result"),
 		// TODO:Replace with actual result, once client is implemented
-		DocContent: documentResult.GetFileContent(),
+		// DocContent: documentResult.GetFileContent(),
 	}, nil
 }
 

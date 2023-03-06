@@ -86,11 +86,6 @@ func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement
 	return resultAgreement, nil
 }
 
-// the method returns interface because the underlying serive returns interface, not ideal
-// func (service *NotePurchaseAgreementService) GenerateDocument(ctx context.Context, payload *interop.NotePurchaseAgreement) (interfaces.IDocumentContent, error) {
-// 	return service.documentContentService.BuildNotePurchaseAgreement(ctx, payload)
-// }
-
 func NewNotePurchaseAgreementService(
 	factory interfaces.INotePurchaseAgreementModelFactory,
 	npag *NotePurchaseAgreementGateway,

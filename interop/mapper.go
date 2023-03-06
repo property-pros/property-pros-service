@@ -108,13 +108,13 @@ func (m *Mapper) hasCustomMapping(fieldName string) bool {
 	if m.customMappings != nil {
 		// if m.customMappings[fieldName] != nil {
 		// 	return true
-		// } 
+		// }
 		// else {
-			for _, customMapping := range m.customMappings {
-				if customMapping[fieldName] != nil {
-					return true
-				}
+		for _, customMapping := range m.customMappings {
+			if customMapping[fieldName] != nil {
+				return true
 			}
+		}
 		// }
 	}
 
