@@ -28,7 +28,7 @@ func (gateway *UsersGateway) GetUser(user data.User) (*data.User, error) {
 	return gateway.repo.FindOne(&user)
 }
 
-func (gateway *UsersGateway) SaveUser(ctx context.Context, agreement interop.NotePurchaseAgreement) (*interop.User, error) {
+func (gateway *UsersGateway) SaveUser(ctx context.Context, agreement *interop.NotePurchaseAgreement) (*interop.User, error) {
 	userData := data.User{
 		Id:             uuid.New().String(),
 		FirstName:      agreement.GetFirstName(),

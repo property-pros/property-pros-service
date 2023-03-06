@@ -11,3 +11,5 @@ type IBaseModel[T any] interface {
 	SetContext(context.Context)
 	GetId() string
 }
+
+

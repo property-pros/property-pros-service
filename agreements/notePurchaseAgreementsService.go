@@ -2,16 +2,20 @@ package agreements
 
 import (
 	"context"
+	"fmt"
 	"log"
 
+	"github.com/vireocloud/property-pros-service/documents"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
+	"github.com/vireocloud/property-pros-service/users"
 )
 
 type NotePurchaseAgreementService struct {
 	factory                      interfaces.INotePurchaseAgreementModelFactory
 	notePurchaseAgreementGateway *NotePurchaseAgreementGateway
-	usersGateway                 interfaces.IUsersGateway
+	usersGateway                 *users.UsersGateway
+	documentContentService       *documents.DocumentContentService
 }
 
 func (service *NotePurchaseAgreementService) GetNotePurchaseAgreementDocContent(ctx context.Context, payload interfaces.IModelPayload) ([]byte, error) {
@@ -66,7 +70,12 @@ func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement
 
 	agreement.User.Id = user.Id
 
-	resultAgreement, err := service.notePurchaseAgreementGateway.SaveUserAndNotePurchaseAgreement(ctx, agreement)
+	docURL, err := service.documentContentService.CreateAndSaveNotePurchaseAgreementDoc(ctx, agreement)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate doc content, err: %w", err)
+	}
+
+	resultAgreement, err := service.notePurchaseAgreementGateway.SaveNotePurchaseAgreement(ctx, agreement, docURL)
 
 	if err != nil {
 		return nil, err
@@ -77,14 +86,23 @@ func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement
 	return resultAgreement, nil
 }
 
+// the method returns interface because the underlying serive returns interface, not ideal
+// func (service *NotePurchaseAgreementService) GenerateDocument(ctx context.Context, payload *interop.NotePurchaseAgreement) (interfaces.IDocumentContent, error) {
+// 	return service.documentContentService.BuildNotePurchaseAgreement(ctx, payload)
+// }
+
 func NewNotePurchaseAgreementService(
 	factory interfaces.INotePurchaseAgreementModelFactory,
-	npag *NotePurchaseAgreementGateway, usersGateway interfaces.IUsersGateway) interfaces.IAgreementsService {
+	npag *NotePurchaseAgreementGateway,
+	usersGateway *users.UsersGateway,
+	documentContentService *documents.DocumentContentService,
+) interfaces.IAgreementsService {
 	log.Printf("factory: %+#v \n\n", factory)
 	return &NotePurchaseAgreementService{
 		factory:                      factory,
 		notePurchaseAgreementGateway: npag,
 		usersGateway:                 usersGateway,
+		documentContentService:       documentContentService,
 	}
 }
 

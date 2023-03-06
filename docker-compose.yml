@@ -18,6 +18,15 @@ services:
       - '5432:5432'
     volumes: 
       - db:/var/lib/postgresql/data
+  s3mock:
+    image: adobe/s3mock
+    restart: always
+    ports:
+      - '9090:9090'    
+      - '9191:9191'
+    environment:
+      - initialBuckets=documents    
+      - debug=true    
 volumes:
   db:
     driver: local

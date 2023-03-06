@@ -23,7 +23,8 @@ func (model *UserModel) GetContext() context.Context {
 }
 
 func (model *UserModel) Save() (interfaces.IUserModel, error) {
-	return model.gateway.SaveUser(model)
+	return nil, nil
+	// return model.gateway.SaveUser(model)
 }
 
 func (model *UserModel) HasAuthenticIdentity() (bool, error) {

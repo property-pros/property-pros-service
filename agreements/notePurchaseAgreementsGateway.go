@@ -28,7 +28,7 @@ func NewNotePurchaseAgreementGateway(
 }
 
 func (g *NotePurchaseAgreementGateway) SaveUserAndNotePurchaseAgreement(ctx context.Context, agreement *interop.NotePurchaseAgreement) (*interop.NotePurchaseAgreement, error) {
-	
+
 	agreementModelData := data.NotePurchaseAgreement{
 		Id:             uuid.New().String(),
 		FundsCommitted: agreement.FundsCommitted,
@@ -46,13 +46,21 @@ func (g *NotePurchaseAgreementGateway) SaveUserAndNotePurchaseAgreement(ctx cont
 	return agreement, nil
 }
 
-func (g *NotePurchaseAgreementGateway) SaveNotePurchaseAgreement(ctx context.Context, agreement data.NotePurchaseAgreement) (data.NotePurchaseAgreement, error) {
-	agreement.Id = uuid.New().String()
-
-	_, err := g.npaRepository.Save(&agreement)
-	if err != nil {
-		return data.NotePurchaseAgreement{}, err
+func (g *NotePurchaseAgreementGateway) SaveNotePurchaseAgreement(ctx context.Context, agreement *interop.NotePurchaseAgreement, docURL string) (*interop.NotePurchaseAgreement, error) {
+	agreementModelData := data.NotePurchaseAgreement{
+		Id:             uuid.New().String(),
+		FundsCommitted: agreement.FundsCommitted,
+		UserId:         agreement.User.Id,
+		DocURL:         docURL,
 	}
+
+	agreementSaved, err := g.npaRepository.Save(&agreementModelData)
+	if err != nil {
+		return nil, err
+	}
+
+	agreement.Id = agreementSaved.Id
+	agreement.CreatedOn = agreementSaved.CreatedOn.Format(time.RFC3339)
 
 	return agreement, nil
 }
