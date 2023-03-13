@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -48,4 +49,25 @@ func (c *AWSS3Client) PutObject(ctx context.Context, content []byte) (string, er
 
 	fmt.Printf("response from s3 is: %v \n", res)
 	return newKey, nil
+}
+
+func (c *AWSS3Client) GetObject(ctx context.Context, key string) ([]byte, error) {
+	fmt.Printf("getting object for key: %v\n", key)
+	input := &s3.GetObjectInput{
+		Bucket: aws.String(c.bucket),
+		Key:    aws.String(key),
+	}
+
+	res, err := c.client.GetObject(input)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	fileContent, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println("Error reading file content from S3 response:", err)
+	}
+	fmt.Println(string(fileContent))
+	return fileContent, nil
 }

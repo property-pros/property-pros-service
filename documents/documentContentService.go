@@ -13,19 +13,18 @@ type DocumentContentService struct {
 }
 
 func (docs *DocumentContentService) BuildNotePurchaseAgreement(ctx context.Context, payload *interop.NotePurchaseAgreement) (interfaces.IDocumentContent, error) {
-	// TODO: Currently the client errs for unknown reasons, will wait to uncomment it once the doc-service is fixed.
-	// documentResult, err := docs.notePurchaseAgreementServiceDocClient.GetNotePurchaseAgreementDoc(ctx, &interop.GetNotePurchaseAgreementDocRequest{
-	// 	Payload: payload,
-	// })
+	documentResult, err := docs.notePurchaseAgreementServiceDocClient.GetNotePurchaseAgreementDoc(ctx, &interop.GetNotePurchaseAgreementDocRequest{
+		Payload: payload,
+	})
 
-	// if err != nil {
-	// 	return nil, err
-	// }
+	if err != nil {
+		return nil, err
+	}
 
 	return &DocumentContent{
-		DocContent: []byte("dummy result"),
+		// DocContent: []byte("dummy result"),
 		// TODO:Replace with actual result, once client is implemented
-		// DocContent: documentResult.GetFileContent(),
+		DocContent: documentResult.GetFileContent(),
 	}, nil
 }
 
@@ -38,9 +37,9 @@ func (docService *DocumentContentService) CreateAndSaveNotePurchaseAgreementDoc(
 	return docService.uploader.PutObject(ctx, result.GetDocContent())
 }
 
-// func (docs *DocumentContentService) BuildAccountStatement() {
-
-// }
+func (docService *DocumentContentService) GetDocumentContent(ctx context.Context, id string) ([]byte, error) {
+	return docService.uploader.GetObject(ctx, id)
+}
 
 func NewDocumentContentService(
 	client interop.NotePurchaseAgreementServiceClient,
@@ -51,3 +50,7 @@ func NewDocumentContentService(
 		uploader:                              uploader,
 	}
 }
+
+// func (docs *DocumentContentService) BuildAccountStatement() {
+
+// }

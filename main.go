@@ -53,7 +53,9 @@ var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(
 	NewNotePurchaseAgreementModelFactory,
 	agreements.NewNotePurchaseAgreementGateway,
 	bootstrap.NewGrpcConnection,
-	bootstrap.NewNotePurchaseAgreementClient,
+	// currently the client returns error, so using mock client
+	// bootstrap.NewNotePurchaseAgreementClient,
+	documents.NewDocClientMock,
 	documents.NewDocumentContentService,
 	agreements.NewNotePurchaseAgreementService,
 	controllers.NewNotePurchaseAgreementController)

@@ -7,6 +7,6 @@ import (
 )
 
 type IUsersGateway interface {
-	SaveUser(ctx context.Context, user *interop.NotePurchaseAgreement) (*interop.User, error)
-	GetUserByUsername(user IUserModel) (IUserModel, error)
+	SaveUser(ctx context.Context, user *interop.NotePurchaseAgreement) (*interop.NotePurchaseAgreement, error)
+	GetUserByUsername(userEmail string) (*interop.NotePurchaseAgreement, error)
 }

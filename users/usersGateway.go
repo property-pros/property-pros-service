@@ -15,20 +15,34 @@ type UsersGateway struct {
 	factory interfaces.IUserModelFactory
 }
 
-func (gateway *UsersGateway) GetUserByUsername(user data.User) (*data.User, error) {
-	users := gateway.repo.Query(&user)
+func (gateway *UsersGateway) GetUserByUsername(userEmail string) (*interop.NotePurchaseAgreement, error) {
+	users := gateway.repo.Query(&data.User{
+		EmailAddress: userEmail,
+	})
 	if len(users) == 0 {
 		return nil, errors.New("no user found")
 	}
 
-	return users[0], nil
+	return &interop.NotePurchaseAgreement{
+		FirstName:   users[0].FirstName,
+		LastName:    users[0].LastName,
+		DateOfBirth: users[0].DateOfBirth,
+		User: &interop.User{
+			EmailAddress: users[0].EmailAddress,
+			Password:     users[0].Password,
+			Id:           users[0].Id,
+		},
+		HomeAddress:    users[0].HomeAddress,
+		PhoneNumber:    users[0].PhoneNumber,
+		SocialSecurity: users[0].SocialSecurity,
+	}, nil
 }
 
 func (gateway *UsersGateway) GetUser(user data.User) (*data.User, error) {
 	return gateway.repo.FindOne(&user)
 }
 
-func (gateway *UsersGateway) SaveUser(ctx context.Context, agreement *interop.NotePurchaseAgreement) (*interop.User, error) {
+func (gateway *UsersGateway) SaveUser(ctx context.Context, agreement *interop.NotePurchaseAgreement) (*interop.NotePurchaseAgreement, error) {
 	userData := data.User{
 		Id:             uuid.New().String(),
 		FirstName:      agreement.GetFirstName(),
@@ -47,11 +61,9 @@ func (gateway *UsersGateway) SaveUser(ctx context.Context, agreement *interop.No
 		return nil, err
 	}
 
-	return &interop.User{
-		Id:           user.Id,
-		EmailAddress: user.EmailAddress,
-		Password:     user.Password,
-	}, nil
+	agreement.User.Id = user.Id
+
+	return agreement, nil
 }
 
 func (gateway *UsersGateway) CreateNewUser(user data.User) (*data.User, error) {
@@ -64,9 +76,8 @@ func (gateway *UsersGateway) UpdateUser(user data.User) (data.User, error) {
 	return data.User{}, nil
 }
 
-func NewUsersGateway(repo interfaces.IRepository[data.User], factory interfaces.IUserModelFactory) *UsersGateway {
+func NewUsersGateway(repo interfaces.IRepository[data.User]) interfaces.IUsersGateway {
 	return &UsersGateway{
-		repo:    repo,
-		factory: factory,
+		repo: repo,
 	}
 }

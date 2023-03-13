@@ -6,43 +6,23 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/vireocloud/property-pros-service/data"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
 	"google.golang.org/protobuf/proto"
 )
 
 type UsersService struct {
-	userGateway *UsersGateway
-}
-
-func (service *UsersService) SaveUser(ctx context.Context, user *interop.User) (*interop.User, error) {
-	// model, err := service.factory.NewUserModel(ctx, user)
-
-	// if err != nil {
-	// 	fmt.Printf("%v error in SaveUser userService", err)
-	// 	return nil, err
-	// }
-	// fmt.Println("saving user")
-	// fmt.Printf("%v\n", model)
-	// model, err = model.Save()
-
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	return &interop.User{}, nil
+	userGateway interfaces.IUsersGateway
 }
 
 func (service *UsersService) AuthenticateUser(ctx context.Context, user *interop.User) (bool, error) {
-	usr, err := service.userGateway.GetUserByUsername(data.User{
-		EmailAddress: user.EmailAddress,
-	})
+
+	usr, err := service.userGateway.GetUserByUsername(user.EmailAddress)
 	if err != nil {
 		return false, err
 	}
 
-	if user.Password != usr.Password {
+	if user.Password != usr.User.Password {
 		return false, nil
 	}
 
@@ -79,7 +59,7 @@ func (service *UsersService) GenerateBasicUserAuthToken(user *interop.User) stri
 	return fmt.Sprintf("Basic %v", base64.StdEncoding.EncodeToString(authToken))
 }
 
-func NewUsersService(userGateway *UsersGateway) interfaces.IUsersService {
+func NewUsersService(userGateway interfaces.IUsersGateway) interfaces.IUsersService {
 	return &UsersService{userGateway: userGateway}
 }
 

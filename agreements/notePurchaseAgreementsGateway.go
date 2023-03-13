@@ -83,21 +83,23 @@ func (g *NotePurchaseAgreementGateway) Getall(ctx context.Context) ([]interfaces
 	// return models, nil
 }
 
-func (g *NotePurchaseAgreementGateway) FindOne(ctx context.Context, payload interfaces.IModelPayload) (*interop.NotePurchaseAgreement, error) {
+
+
+func (g *NotePurchaseAgreementGateway) FindOne(ctx context.Context, payload interfaces.IModelPayload) (npaRecord *interop.NotePurchaseAgreement, docURL string, err error) {
 	npaReqModel := data.NotePurchaseAgreement{
 		Id: payload.GetId(),
 	}
 
 	npa, err := g.npaRepository.FindOne(&npaReqModel)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	usr, err := g.userRepository.FindOne(&data.User{
 		Id: npa.UserId,
 	})
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	return &interop.NotePurchaseAgreement{
@@ -110,9 +112,6 @@ func (g *NotePurchaseAgreementGateway) FindOne(ctx context.Context, payload inte
 		SocialSecurity: usr.SocialSecurity,
 		FundsCommitted: npa.FundsCommitted,
 		CreatedOn:      npa.CreatedOn.Format(time.RFC3339),
-	}, nil
+	}, npa.DocURL, nil
 }
 
-func (g *NotePurchaseAgreementGateway) FindOne1(ctx context.Context, model data.NotePurchaseAgreement) (*data.NotePurchaseAgreement, error) {
-	return g.npaRepository.FindOne(&model)
-}

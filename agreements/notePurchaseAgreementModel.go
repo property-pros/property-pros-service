@@ -71,17 +71,18 @@ func (notePurchaseAgreement *NotePurchaseAgreementModel) GenerateDocument(result
 
 func (notePurchaseAgreement *NotePurchaseAgreementModel) SaveUser(resultChannel chan<- *interop.User) (*interop.User, error) {
 
-	result, err := notePurchaseAgreement.userService.SaveUser(notePurchaseAgreement.Context, notePurchaseAgreement.GetUserPayload())
-	if err != nil {
-		close(resultChannel)
-		return nil, err
-	}
+	// result, err := notePurchaseAgreement.userService.SaveUser(notePurchaseAgreement.Context, notePurchaseAgreement.GetUserPayload())
+	// if err != nil {
+	// 	close(resultChannel)
+	// 	return nil, err
+	// }
 
-	if resultChannel != nil {
-		resultChannel <- result
-	}
+	// if resultChannel != nil {
+	// 	resultChannel <- result
+	// }
 
-	return result, nil
+	// return result, nil
+	return nil, nil
 }
 
 func (notePurchaseAgreement *NotePurchaseAgreementModel) SaveNotePurchaseAgreement(docChannel <-chan interfaces.IDocumentContent) (interfaces.IAgreementModel, error) {

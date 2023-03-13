@@ -8,52 +8,31 @@ import (
 	"github.com/vireocloud/property-pros-service/documents"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
-	"github.com/vireocloud/property-pros-service/users"
 )
 
 type NotePurchaseAgreementService struct {
 	factory                      interfaces.INotePurchaseAgreementModelFactory
 	notePurchaseAgreementGateway *NotePurchaseAgreementGateway
-	usersGateway                 *users.UsersGateway
+	usersGateway                 interfaces.IUsersGateway
 	documentContentService       *documents.DocumentContentService
 }
 
 func (service *NotePurchaseAgreementService) GetNotePurchaseAgreementDocContent(ctx context.Context, payload interfaces.IModelPayload) ([]byte, error) {
-	model, err := service.GetNotePurchaseAgreementModel(ctx, payload)
 
+	_, docURL, err := service.notePurchaseAgreementGateway.FindOne(ctx, payload)
 	if err != nil {
 		return nil, err
 	}
 
-	model, err = model.LoadDocument()
-
-	if err != nil {
-		return nil, err
-	}
-
-	return model.GetPayload().GetFileContent(), nil
-}
-
-func (service *NotePurchaseAgreementService) GetNotePurchaseAgreementModel(ctx context.Context, payload interfaces.IModelPayload) (interfaces.IAgreementModel, error) {
-
-	// model, err := service.factory.NewPurchaseAgreementModel(ctx, payload.(*interop.NotePurchaseAgreement))
-
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// model, err = service.notePurchaseAgreementGateway.FindOne(ctx, model)
-
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// return model, nil
-	return &NotePurchaseAgreementModel{}, nil
+	content, err := service.documentContentService.GetDocumentContent(ctx, docURL)
+	fmt.Printf("content is %v\n", content)
+	fmt.Printf("content is %v\n", string(content))
+	return content, err
 }
 
 func (service *NotePurchaseAgreementService) GetNotePurchaseAgreement(ctx context.Context, payload interfaces.IModelPayload) (*interop.NotePurchaseAgreement, error) {
-	return service.notePurchaseAgreementGateway.FindOne(ctx, payload)
+	npa, _, err := service.notePurchaseAgreementGateway.FindOne(ctx, payload)
+	return npa, err
 }
 
 func (service *NotePurchaseAgreementService) GetNotePurchaseAgreements(ctx context.Context) ([]interfaces.IAgreementModel, error) {
@@ -89,7 +68,7 @@ func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement
 func NewNotePurchaseAgreementService(
 	factory interfaces.INotePurchaseAgreementModelFactory,
 	npag *NotePurchaseAgreementGateway,
-	usersGateway *users.UsersGateway,
+	usersGateway interfaces.IUsersGateway,
 	documentContentService *documents.DocumentContentService,
 ) interfaces.IAgreementsService {
 	log.Printf("factory: %+#v \n\n", factory)
