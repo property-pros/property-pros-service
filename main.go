@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/wire"
 	"github.com/vireocloud/property-pros-service/agreements"
+	awss3 "github.com/vireocloud/property-pros-service/aws-s3"
 	"github.com/vireocloud/property-pros-service/bootstrap"
 	"github.com/vireocloud/property-pros-service/config"
 	"github.com/vireocloud/property-pros-service/data"
@@ -27,8 +28,6 @@ func main() {
 		panic(fmt.Errorf("failed to boostrap application: %w", err))
 	}
 
-	
-
 	err = app.Run()
 
 	if err != nil {
@@ -39,21 +38,25 @@ func main() {
 
 var UserSet wire.ProviderSet = wire.NewSet(
 	data.NewUsersRepository,
-	users.NewUsersGateway,
 	users.NewUserModel,
 	NewUserModelFactory,
+	users.NewUsersGateway,
 	users.NewUsersService,
 	controllers.NewAuthController)
 
 var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(
 	data.NewGormDatabase,
+	awss3.NewClient,
 	data.NewAgreementsRepository,
+
 	// agreements.NewNotePurchaseAgreementModel,
 	NewNotePurchaseAgreementModelFactory,
 	agreements.NewNotePurchaseAgreementGateway,
 	bootstrap.NewGrpcConnection,
-	bootstrap.NewNotePurchaseAgreementClient,
-	documents.NewDocumentContentManager,
+	// currently the client returns error, so using mock client
+	// bootstrap.NewNotePurchaseAgreementClient,
+	documents.NewDocClientMock,
+	documents.NewDocumentContentService,
 	agreements.NewNotePurchaseAgreementService,
 	controllers.NewNotePurchaseAgreementController)
 
@@ -138,5 +141,3 @@ func (factory *Factory) NewUserModel(context ctx.Context, user *interop.User) (i
 func NewUserModelFactory() interfaces.IUserModelFactory {
 	return &Factory{}
 }
-
-

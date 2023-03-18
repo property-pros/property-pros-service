@@ -23,17 +23,19 @@ func (model *UserModel) GetContext() context.Context {
 }
 
 func (model *UserModel) Save() (interfaces.IUserModel, error) {
-	return model.gateway.SaveUser(model)
+	return nil, nil
+	// return model.gateway.SaveUser(model)
 }
 
 func (model *UserModel) HasAuthenticIdentity() (bool, error) {
-	userModel, err := model.gateway.GetUserByUsername(model)
+	// userModel, err := model.gateway.GetUserByUsername(model)
 
-	if err != nil {
-		return false, nil
-	}
+	// if err != nil {
+	// 	return false, nil
+	// }
 
-	return model.MatchCredentials(userModel)
+	// return model.MatchCredentials(userModel)
+	return false, nil
 }
 
 func (model *UserModel) MatchCredentials(identity interfaces.IUserModel) (bool, error) {

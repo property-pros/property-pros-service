@@ -5,16 +5,18 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
 )
 
 var testDocumentContentManager interfaces.IDocumentContentService
 var mockClient interop.NotePurchaseAgreementServiceClient
+var mockDocUploader *DocUploaderMock
 
 func TestBuildNotePurchaseAgreement(t *testing.T) {
 	Setup()
-
+	mockDocUploader.On("PutObject").Return("someId", nil)
 	documentContent, err := testDocumentContentManager.BuildNotePurchaseAgreement(context.TODO(), &interop.NotePurchaseAgreement{})
 
 	if err != nil {
@@ -37,23 +39,29 @@ func TestBuildNotePurchaseAgreement(t *testing.T) {
 	Teardown()
 }
 
-type ClientMock struct {
-	interop.NotePurchaseAgreementServiceClient
+type DocUploaderMock struct {
+	mock.Mock
 }
 
-func (*ClientMock) GetNotePurchaseAgreementDoc(ctx context.Context, in *interop.GetNotePurchaseAgreementDocRequest, opts ...interop.CallOption) (*interop.GetNotePurchaseAgreementDocResponse, error) {
-	return &interop.GetNotePurchaseAgreementDocResponse{
-		FileContent: []byte{'1', '2', '3'},
-	}, nil
+func (m *DocUploaderMock) PutObject(ctx context.Context, content []byte) (string, error) {
+	args := m.Called(ctx, content)
+
+	return args.Get(0).(string), nil
 }
 
+func (m *DocUploaderMock) GetObject(ctx context.Context, url string) ([]byte, error) {
+	args := m.Called(ctx, url)
+
+	return args.Get(0).([]byte), nil
+}
 func TestBuildAccountStatement(t *testing.T) {}
 
 func Setup() {
 
 	mockClient = &ClientMock{}
+	mockDocUploader = &DocUploaderMock{}
 
-	testDocumentContentManager = NewDocumentContentManager(mockClient)
+	testDocumentContentManager = NewDocumentContentService(mockClient, mockDocUploader)
 }
 
 func Teardown() {

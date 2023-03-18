@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"github.com/vireocloud/property-pros-service/common"
+	"github.com/vireocloud/property-pros-service/data"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
 )
@@ -15,31 +15,23 @@ import (
 // functionality from testify - including assertion methods.
 type UsersGatewayTestSuite struct {
 	suite.Suite
-	baseModel            *common.BaseModel[interop.User]
-	mockUserModelFactory *MockUserModelFactory
-	mockUserModel        *MockUserModel
-	testUserPayload      *interop.User
-	mockUserRepo         *MockUserRepo
-	usersGateway         interfaces.IUsersGateway
+	testUserPayload *interop.NotePurchaseAgreement
+	mockUserRepo    *MockUserRepo
+	usersGateway    interfaces.IUsersGateway
 }
 
 // Make sure that VariableThatShouldStartAtFive is set to five
 // before each test
 func (suite *UsersGatewayTestSuite) SetupTest() {
-	suite.testUserPayload = new(interop.User)
-	suite.baseModel = &common.BaseModel[interop.User]{
-		Context: context.TODO(),
-		Payload: new(interop.User),
+	suite.testUserPayload = &interop.NotePurchaseAgreement{
+		User: &interop.User{
+			EmailAddress: "hjh",
+			Password:     "dfsdf",
+		},
+		Id: "dsfds",
 	}
-	suite.mockUserModelFactory = new(MockUserModelFactory)
 	suite.mockUserRepo = new(MockUserRepo)
-	suite.usersGateway = &UsersGateway{
-		factory: suite.mockUserModelFactory,
-		repo:    suite.mockUserRepo,
-	}
-	suite.mockUserModel = &MockUserModel{
-		BaseModel: suite.baseModel,
-	}
+	suite.usersGateway = NewUsersGateway(suite.mockUserRepo)
 }
 
 // In order for 'go test' to run this suite, we need to create
@@ -49,40 +41,44 @@ func TestUsersGatewayTestSuite(t *testing.T) {
 }
 
 func (suite *UsersGatewayTestSuite) TestSaveUser() {
-	suite.SetExpectationsSaveUser()
+	suite.mockUserRepo.On("Save").Return(&data.User{
+		Id: "someID",
+	})
 
-	suite.usersGateway.SaveUser(suite.mockUserModel)
-
+	suite.usersGateway.SaveUser(context.TODO(), suite.testUserPayload)
 	suite.AssertExpectationsSaveUser()
 }
 
-func (suite *UsersGatewayTestSuite) SetExpectationsSaveUser() {
-	// suite.userService.waitGroup.Add(1)
-	suite.mockUserModelFactory.On("NewUserModel").Return(suite.mockUserModel, nil)
-	suite.mockUserModel.On("GetPayload").Return(suite.testUserPayload, nil)
-	suite.mockUserRepo.On("Save").Return(suite.testUserPayload, nil)
+func (suite *UsersGatewayTestSuite) TestGetUserByUsername() {
+	suite.mockUserRepo.On("Query").Return([]*data.User{{
+		Id:           "someID",
+		EmailAddress: "test@email.com",
+	}})
+
+	suite.usersGateway.GetUserByUsername("test@email.com")
+	suite.mockUserRepo.AssertExpectations(suite.T())
 }
 
 func (suite *UsersGatewayTestSuite) AssertExpectationsSaveUser() {
-	// suite.userService.waitGroup.Wait()
-	suite.mockUserModelFactory.AssertExpectations(suite.T())
-	suite.mockUserModel.AssertExpectations(suite.T())
 	suite.mockUserRepo.AssertExpectations(suite.T())
 }
 
 type MockUserRepo struct {
-	interfaces.IRepository[interop.User]
+	interfaces.IRepository[data.User]
 	mock.Mock
 	// waitGroup sync.WaitGroup
 }
 
-func (mocked *MockUserRepo) Save(user *interop.User) (*interop.User, error) {
-	// defer mocked.waitGroup.Done()
+func (mocked *MockUserRepo) Save(user *data.User) (*data.User, error) {
 	args := mocked.Called()
 
-	return args.Get(0).(*interop.User), args.Error(1)
+	return args.Get(0).(*data.User), nil
 }
 
-var _ interfaces.IRepository[interop.User] = (*MockUserRepo)(nil)
+func (mocked *MockUserRepo) Query(user *data.User) []*data.User {
+	args := mocked.Called()
 
-var _ interfaces.IUserModel = (*MockUserModel)(nil)
+	return args.Get(0).([]*data.User)
+}
+
+var _ interfaces.IRepository[data.User] = (*MockUserRepo)(nil)

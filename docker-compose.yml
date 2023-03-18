@@ -18,6 +18,22 @@ services:
       - '5432:5432'
     volumes: 
       - db:/var/lib/postgresql/data
+  s3mock:
+    image: adobe/s3mock
+    restart: always
+    ports:
+      - '9090:9090'    
+      - '9191:9191'
+    environment:
+      - initialBuckets=documents    
+      - debug=true  
+      - root=/data
+      - trace=true
+      - JAVA_TOOL_OPTIONS=-Dcom.amazonaws.sdk.disableCbor=true
+
+    command: ["--hostname=my-bucket-name.localhost"]
+    volumes:
+      - ./s3mock_data:/data    
 volumes:
   db:
     driver: local

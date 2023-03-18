@@ -43,7 +43,7 @@ func (c *StatementController) GetStatements(ctx context.Context, req *interop.Ge
 	// response.Statements = c.statementsRepo.Query(query)
 
 	response.Statements = []*statement.Statement{
-		{UserId: query.UserId },
+		{UserId: query.UserId},
 	}
 
 	return response, nil
