@@ -20,20 +20,60 @@ type AWSS3Client struct {
 	bucket string
 }
 
+var AWS_BUCKET = "documents"
+
 func NewClient() interfaces.IDocUploader {
 	sess := session.Must(session.NewSession(&aws.Config{
 		// TODO: move to config
-		Endpoint:    aws.String("http://s3mock:9090"),
+		Endpoint:    aws.String("http://localhost:9090"),
 		Region:      aws.String("us-west-2"),
 		Credentials: credentials.NewStaticCredentials("accessKey", "secretKey", ""),
+		// needed for local docker image, should work for aws s3 too
+		S3ForcePathStyle: aws.Bool(true),
 	}))
 
 	cli := s3.New(sess, aws.NewConfig())
 
-	return &AWSS3Client{
+	awsCli := &AWSS3Client{
 		client: cli,
-		bucket: "documents",
+		bucket: AWS_BUCKET,
 	}
+
+	err := awsCli.CreateBucketIfNotExists(context.TODO(), AWS_BUCKET)
+	if err != nil {
+		panic(err)
+	}
+
+	return awsCli
+}
+
+func (c *AWSS3Client) CreateBucketIfNotExists(ctx context.Context, bucket string) error {
+	fmt.Println("checking if the bucket exists")
+
+	res, err := c.client.HeadBucket(&s3.HeadBucketInput{
+		Bucket: aws.String(bucket),
+	})
+
+	fmt.Println(res)
+
+	if err != nil {
+		fmt.Println("creating bucket, as it doesn't exist")
+		_, err := c.client.CreateBucket(&s3.CreateBucketInput{
+			Bucket: aws.String(bucket),
+		})
+
+		// Wait for the bucket to be created before proceeding.
+		err = c.client.WaitUntilBucketExists(&s3.HeadBucketInput{
+			Bucket: aws.String(bucket),
+		})
+
+		if err != nil {
+			fmt.Println("Error waiting for bucket:", err)
+			return fmt.Errorf("Error waiting for bucket, %w", err)
+		}
+	}
+
+	return nil
 }
 
 func (c *AWSS3Client) PutObject(ctx context.Context, content []byte) (string, error) {
@@ -50,6 +90,13 @@ func (c *AWSS3Client) PutObject(ctx context.Context, content []byte) (string, er
 	}
 
 	fmt.Printf("response from s3 is: %v \n", res)
+
+	res1, err := c.client.ListObjects(&s3.ListObjectsInput{
+		Bucket: aws.String("documents"),
+	})
+
+	fmt.Printf("response from s3 List Objects is: %v \n", res1)
+
 	return newKey, nil
 }
 
@@ -70,6 +117,6 @@ func (c *AWSS3Client) GetObject(ctx context.Context, key string) ([]byte, error)
 	if err != nil {
 		fmt.Println("Error reading file content from S3 response:", err)
 	}
-	fmt.Println(string(fileContent))
+
 	return fileContent, nil
 }

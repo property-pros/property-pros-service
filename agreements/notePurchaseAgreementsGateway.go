@@ -83,8 +83,6 @@ func (g *NotePurchaseAgreementGateway) Getall(ctx context.Context) ([]interfaces
 	// return models, nil
 }
 
-
-
 func (g *NotePurchaseAgreementGateway) FindOne(ctx context.Context, payload interfaces.IModelPayload) (npaRecord *interop.NotePurchaseAgreement, docURL string, err error) {
 	npaReqModel := data.NotePurchaseAgreement{
 		Id: payload.GetId(),
@@ -114,4 +112,3 @@ func (g *NotePurchaseAgreementGateway) FindOne(ctx context.Context, payload inte
 		CreatedOn:      npa.CreatedOn.Format(time.RFC3339),
 	}, npa.DocURL, nil
 }
-
