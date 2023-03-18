@@ -9,7 +9,6 @@ type DocumentContent struct {
 	SerializedTemplateModel   []byte
 	DeserializedTemplateModel interface{}
 	DocContent                []byte
-	UserId                    string
 }
 
 func (d *DocumentContent) GetDocContent() []byte {
