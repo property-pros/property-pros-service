@@ -25,7 +25,7 @@ var AWS_BUCKET = "documents"
 func NewClient() interfaces.IDocUploader {
 	sess := session.Must(session.NewSession(&aws.Config{
 		// TODO: move to config
-		Endpoint:    aws.String("http://localhost:9090"),
+		Endpoint:    aws.String("http://s3mock:9090"),
 		Region:      aws.String("us-west-2"),
 		Credentials: credentials.NewStaticCredentials("accessKey", "secretKey", ""),
 		// needed for local docker image, should work for aws s3 too
@@ -50,11 +50,9 @@ func NewClient() interfaces.IDocUploader {
 func (c *AWSS3Client) CreateBucketIfNotExists(ctx context.Context, bucket string) error {
 	fmt.Println("checking if the bucket exists")
 
-	res, err := c.client.HeadBucket(&s3.HeadBucketInput{
+	_, err := c.client.HeadBucket(&s3.HeadBucketInput{
 		Bucket: aws.String(bucket),
 	})
-
-	fmt.Println(res)
 
 	if err != nil {
 		fmt.Println("creating bucket, as it doesn't exist")
@@ -84,24 +82,15 @@ func (c *AWSS3Client) PutObject(ctx context.Context, content []byte) (string, er
 		Body:   bytes.NewReader(content),
 	}
 
-	res, err := c.client.PutObject(input)
+	_, err := c.client.PutObject(input)
 	if err != nil {
 		return "", err
 	}
-
-	fmt.Printf("response from s3 is: %v \n", res)
-
-	res1, err := c.client.ListObjects(&s3.ListObjectsInput{
-		Bucket: aws.String("documents"),
-	})
-
-	fmt.Printf("response from s3 List Objects is: %v \n", res1)
 
 	return newKey, nil
 }
 
 func (c *AWSS3Client) GetObject(ctx context.Context, key string) ([]byte, error) {
-	fmt.Printf("getting object for key: %v\n", key)
 	input := &s3.GetObjectInput{
 		Bucket: aws.String(c.bucket),
 		Key:    aws.String(key),
