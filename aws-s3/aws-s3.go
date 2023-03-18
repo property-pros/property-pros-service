@@ -17,6 +17,7 @@ import (
 type AWSS3Client struct {
 	interfaces.IDocUploader
 	client *s3.S3
+	bucket string
 }
 
 func NewClient() interfaces.IDocUploader {
@@ -37,7 +38,7 @@ func NewClient() interfaces.IDocUploader {
 func (c *AWSS3Client) PutObject(ctx context.Context, content []byte) (string, error) {
 	newKey := uuid.New().String()
 	input := &s3.PutObjectInput{
-		Bucket: aws.String("documents"),
+		Bucket: aws.String(c.bucket),
 		Key:    aws.String(newKey),
 		Body:   bytes.NewReader(content),
 	}
