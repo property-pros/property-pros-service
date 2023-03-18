@@ -32,6 +32,7 @@ func NewClient() interfaces.IDocUploader {
 
 	return &AWSS3Client{
 		client: cli,
+		bucket: "documents",
 	}
 }
 
