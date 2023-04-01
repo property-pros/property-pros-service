@@ -41,13 +41,13 @@ func (service *NotePurchaseAgreementService) GetNotePurchaseAgreements(ctx conte
 
 func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement *interop.NotePurchaseAgreement) (*interop.NotePurchaseAgreement, error) {
 
-	user, err := service.usersGateway.SaveUser(ctx, agreement)
+	npaWithUser, err := service.usersGateway.SaveUser(ctx, agreement)
 
 	if err != nil {
 		return nil, err
 	}
 
-	agreement.User.Id = user.Id
+	agreement.User.Id = npaWithUser.User.Id
 
 	docURL, err := service.documentContentService.CreateAndSaveNotePurchaseAgreementDoc(ctx, agreement)
 	if err != nil {
@@ -60,7 +60,7 @@ func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement
 		return nil, err
 	}
 
-	resultAgreement.User.Id = user.Id
+	resultAgreement.User.Id = npaWithUser.User.Id
 
 	return resultAgreement, nil
 }
