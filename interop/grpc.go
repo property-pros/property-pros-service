@@ -3,12 +3,13 @@ package interop
 import (
 	propertyProsAuthApi "github.com/vireocloud/property-pros-sdk/api/auth/v1"
 	apiCommon "github.com/vireocloud/property-pros-sdk/api/common/v1"
+	propertyProsFinanceApi "github.com/vireocloud/property-pros-sdk/api/finance/v1"
 	propertyProsAgreementApi "github.com/vireocloud/property-pros-sdk/api/note_purchase_agreement/v1"
 	propertyProsStatementApi "github.com/vireocloud/property-pros-sdk/api/statement/v1"
 	"google.golang.org/grpc"
 )
 
-//note purchase agreements
+// note purchase agreements
 type UnsafeNotePurchaseAgreementServiceServer = propertyProsAgreementApi.UnsafeNotePurchaseAgreementServiceServer
 type UnimplementedNotePurchaseAgreementServiceServer = propertyProsAgreementApi.UnimplementedNotePurchaseAgreementServiceServer
 type NotePurchaseAgreementServiceServer = propertyProsAgreementApi.NotePurchaseAgreementServiceServer
@@ -72,3 +73,22 @@ var NewStatementServiceClient = propertyProsStatementApi.NewStatementServiceClie
 var RegisterStatementServiceHandlerFromEndpoint = propertyProsStatementApi.RegisterStatementServiceHandlerFromEndpoint
 
 type CallOption = grpc.CallOption
+
+// finance
+type FinanceServiceServer = propertyProsFinanceApi.FinanceServiceServer
+type UnsafeFinanceServiceServer = propertyProsFinanceApi.UnsafeFinanceServiceServer
+type UnimplementedFinanceServiceServer = propertyProsFinanceApi.UnimplementedFinanceServiceServer
+
+type FinancialData = propertyProsFinanceApi.FinancialData
+type Account = propertyProsFinanceApi.Account
+type Balance = propertyProsFinanceApi.Balance
+type Transaction = propertyProsFinanceApi.Transaction
+
+type SaveFinancialItemRequest = propertyProsFinanceApi.SaveFinancialItemRequest
+type SaveFinancialItemResponse = propertyProsFinanceApi.SaveFinancialItemResponse
+
+// type GetFinancialItemRequest = propertyProsFinanceApi.GetFinancialItemRequest
+// type GetFinancialItemResponse = propertyProsFinanceApi.GetFinancialItemResponse
+
+// type GetFinancialItemsRequest = propertyProsFinanceApi.GetFinancialItemsRequest
+// type GetFinancialItemsResponse = propertyProsFinanceApi.GetFinancialItemsResponse
