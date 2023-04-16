@@ -85,7 +85,7 @@ func (repo *GormRepository[T, PT]) Query(query *T) []*T {
 	var results interface{} = []*T{}
 
 	// whereResult := repo.db.Where()
-	repo.db.Find(&results, query)
+	repo.db.Debug().Find(&results, query)
 
 	return results.([]*T)
 }
@@ -93,7 +93,7 @@ func (repo *GormRepository[T, PT]) Query(query *T) []*T {
 func (repo *GormRepository[T, PT]) Delete(query *T) (*T, error) {
 	log.Printf("delete entity: %v", query)
 
-	repo.db.Model(query).Delete(query)
+	repo.db.Debug().Model(query).Delete(query)
 
 	return query, nil
 }

@@ -70,8 +70,7 @@ func (g *NotePurchaseAgreementGateway) SaveNotePurchaseAgreement(ctx context.Con
 
 func (g *NotePurchaseAgreementGateway) Getall(ctx context.Context) ([]*interop.NotePurchaseAgreement, error) {
 	agreements := make([]*interop.NotePurchaseAgreement, 0)
-	fmt.Println("ctx.Value(constants.UserIdKey)")
-	fmt.Println(ctx.Value(constants.UserIdKey))
+
 	usrID := fmt.Sprintf("%v", ctx.Value(constants.UserIdKey))
 	if usrID == "" {
 		return nil, errors.New("unresolved userid")
@@ -80,7 +79,6 @@ func (g *NotePurchaseAgreementGateway) Getall(ctx context.Context) ([]*interop.N
 	npas := g.npaRepository.Query(&data.NotePurchaseAgreement{
 		UserId: usrID,
 	})
-	fmt.Println(npas)
 
 	for _, npa := range npas {
 		agreements = append(agreements, &interop.NotePurchaseAgreement{
@@ -88,7 +86,6 @@ func (g *NotePurchaseAgreementGateway) Getall(ctx context.Context) ([]*interop.N
 			CreatedOn: npa.CreatedOn.Format(time.RFC3339),
 		})
 	}
-	fmt.Println(agreements)
 
 	return agreements, nil
 }
