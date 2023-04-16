@@ -15,38 +15,41 @@ type UsersService struct {
 	userGateway interfaces.IUsersGateway
 }
 
-func (service *UsersService) AuthenticateUser(ctx context.Context, user *interop.User) (bool, error) {
+func (service *UsersService) AuthenticateUser(ctx context.Context, user *interop.User) (string, error) {
 
 	usr, err := service.userGateway.GetUserByUsername(user.EmailAddress)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
 	if user.Password != usr.User.Password {
-		return false, nil
+		return "", nil
 	}
 
-	return true, nil
+	return usr.User.Id, nil
 }
 
-func (service *UsersService) IsValidToken(ctx context.Context, token string) bool {
+func (service *UsersService) UserIdIfValidToken(ctx context.Context, token string) string {
 	payload := &interop.User{}
 
 	authToken, err := base64.StdEncoding.DecodeString(strings.Replace(token, "Basic ", "", 1))
 
 	if err != nil {
-		return false
+		return ""
 	}
 
 	err = proto.Unmarshal(authToken, payload)
 
 	if err != nil {
-		return false
+		return ""
 	}
 
-	isAuthentic, err := service.AuthenticateUser(ctx, payload)
+	usrID, err := service.AuthenticateUser(ctx, payload)
+	if err != nil || usrID == "" {
+		return ""
+	}
 
-	return err == nil && isAuthentic
+	return usrID
 }
 
 func (service *UsersService) GenerateBasicUserAuthToken(user *interop.User) string {

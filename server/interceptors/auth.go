@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/vireocloud/property-pros-service/constants"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -35,9 +36,10 @@ func (validator *AuthValidationInterceptor) Validate(ctx context.Context, req in
 		}
 
 		token := md.Get("authorization")[0]
-
-		if validator.authService.IsValidToken(ctx, token) {
-			return handler(ctx, req)
+		userId := validator.authService.UserIdIfValidToken(ctx, token)
+		if userId != "" {
+			ctxWithUserId := context.WithValue(ctx, constants.UserIdKey, userId)
+			return handler(ctxWithUserId, req)
 		}
 
 		return nil, status.Error(codes.Unauthenticated, fmt.Sprintf("%v Failed;  Invalid auth token", info.FullMethod))

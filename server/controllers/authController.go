@@ -25,13 +25,13 @@ func (c *AuthController) AuthenticateUser(ctx context.Context, req *interop.Auth
 
 	response := &interop.AuthenticateUserResponse{}
 
-	isAuthentic, err := c.authService.AuthenticateUser(ctx, req.Payload)
+	usrID, err := c.authService.AuthenticateUser(ctx, req.Payload)
 
 	if err != nil {
 		return response, err
 	}
 
-	response.IsAuthenticated = isAuthentic
+	response.IsAuthenticated = usrID != ""
 
 	// We want to extract metadata from the incomming context.
 	// We dont create a new context since we dont wanna overwrite old metadata

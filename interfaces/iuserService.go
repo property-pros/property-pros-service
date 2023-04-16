@@ -7,7 +7,7 @@ import (
 )
 
 type IUsersService interface {
-	AuthenticateUser(context.Context, *interop.User) (bool, error)
-	IsValidToken(ctx context.Context, token string) bool
+	AuthenticateUser(context.Context, *interop.User) (string, error)
+	UserIdIfValidToken(ctx context.Context, token string) string
 	GenerateBasicUserAuthToken(*interop.User) string
 }
