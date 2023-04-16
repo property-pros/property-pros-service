@@ -35,7 +35,7 @@ func (service *NotePurchaseAgreementService) GetNotePurchaseAgreement(ctx contex
 	return npa, err
 }
 
-func (service *NotePurchaseAgreementService) GetNotePurchaseAgreements(ctx context.Context) ([]interfaces.IAgreementModel, error) {
+func (service *NotePurchaseAgreementService) GetNotePurchaseAgreements(ctx context.Context) ([]*interop.NotePurchaseAgreement, error) {
 	return service.notePurchaseAgreementGateway.Getall(ctx)
 }
 
