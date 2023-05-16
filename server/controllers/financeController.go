@@ -16,24 +16,94 @@ type FinanceController struct {
 
 // GetFinancialItem
 
-func (c *FinanceController) GetFinancialItem(ctx context.Context, req *interop.GetFinancialItemRequest) (response *interop.GetFinancialItemResponse, errResult error) {
+func (c *FinanceController) GetFinancialItems(ctx context.Context, req *interop.GetFinancialItemsRequest) (response *interop.GetFinancialItemsResponse, errResult error) {
 
-	response = &interop.GetFinancialItemResponse{}
+	response = &interop.GetFinancialItemsResponse{}
 
-	// get financial item from repo
-	financialItem, err := c.financialRepo.Get(ctx, req.GetUserId())
-
-	if err != nil {
-		return nil, err
+	query := &interop.FinancialItem{
+		UserId: req.GetUserId(),
 	}
 
+	// get financial item from repo
+	financialItems := c.financialRepo.Query(query)
+
 	// map FinancialData to response
-	response.FinancialData = &interop.FinancialData{
-		AccessToken:  financialItem.Token,
-		ItemId:       financialItem.ThirdPartyId,
-		UserId:       financialItem.UserId,
-		Accounts:     financialItem.Accounts,
-		Transactions: financialItem.Transactions,
+	response.FinancialData = []*interop.FinancialData{}
+
+	for _, financialItem := range financialItems {
+
+		// map FinancialItem to FinancialData
+		financialData := &interop.FinancialData{
+			ItemId:       financialItem.ThirdPartyId,
+			AccessToken:  financialItem.Token,
+			Accounts:     []*interop.Account{},
+			Transactions: []*interop.Transaction{},
+		}
+
+		// map FinancialAccount to FinancialData
+		for _, account := range financialItem.Accounts {
+
+			// map FinancialBalance to FinancialAccount
+			balances := &interop.Balance{
+				Available:              account.Balances.Available,
+				Current:                account.Balances.Current,
+				Limit:                  account.Balances.Limit,
+				UnofficialCurrencyCode: account.Balances.UnofficialCurrencyCode,
+				IsoCurrencyCode:        account.Balances.IsoCurrencyCode,
+			}
+
+			financialData.Accounts = append(financialData.Accounts, &interop.Account{
+				AccountId:    account.AccountId,
+				Type:         account.Type,
+				Name:         account.Name,
+				Subtype:      account.Subtype,
+				Mask:         account.Mask,
+				OfficialName: account.OfficialName,
+				Balances:     balances,
+			})
+		}
+
+		// map FinancialTransaction to FinancialData
+		for _, transaction := range financialItem.Transactions {
+
+			// map Location to FinancialTransaction
+			location := &interop.Location{
+				Address: transaction.Location.Address,
+				City:    transaction.Location.City,
+				Region: transaction.Location.State,
+				PostalCode: transaction.Location.Zip,
+			}
+
+			// map PaymentMeta to FinancialTransaction
+			paymentMeta := &interop.PaymentMeta{
+				Payee:            transaction.PaymentMeta.Payee,
+				Payer:            transaction.PaymentMeta.Payer,
+				PaymentMethod:    transaction.PaymentMeta.PaymentMethod,
+				PaymentProcessor: transaction.PaymentMeta.PaymentProcessor,
+				PpdId:            transaction.PaymentMeta.PpdId,
+				ReferenceNumber:  transaction.PaymentMeta.ReferenceNumber,
+			}
+
+			// map FinancialTransaction to FinancialData
+			transactionPayload := &interop.Transaction{
+				AccountId:    transaction.AccountId,
+				TransactionId: transaction.TransactionId,
+				Amount:       transaction.Amount,
+				Category:     transaction.Category,
+				CategoryId:   transaction.CategoryId,
+				Date:         transaction.Date,
+				Name:         transaction.Name,
+				Pending:      transaction.Pending,
+				PendingTransactionId: transaction.PendingTransactionId,
+				TransactionType:      transaction.TransactionType,
+				Location:             location,
+				PaymentMeta:          paymentMeta,				
+			}
+
+			financialData.Transactions = append(financialData.Transactions, transactionPayload)
+		}
+
+		response.FinancialData = append(response.FinancialData, financialData)
 	}
 
 	return response, nil
@@ -45,13 +115,13 @@ func (c *FinanceController) SaveFinancialItem(ctx context.Context, req *interop.
 
 	// map request to FinancialItem
 	payload := &interop.FinancialItem{
-		UserId:       req.GetUserId(),
-		ThirdPartyId: req.GetItemId(),
-		Token:        req.GetAccessToken(),
+		UserId:       req.GetPayload().GetUserId(),
+		ThirdPartyId: req.GetPayload().GetItemId(),
+		Token:        req.GetPayload().GetAccessToken(),
 	}
 
 	// loop through req.Accounts and map to payload.Accounts
-	for _, account := range req.GetAccounts() {
+	for _, account := range req.GetPayload().GetAccounts() {
 
 		// map request balances to interop.FinancialBalance
 		balances := &interop.FinancialBalance{
@@ -74,17 +144,17 @@ func (c *FinanceController) SaveFinancialItem(ctx context.Context, req *interop.
 	}
 
 	// loop through req.Transactions and map to payload.Transactions
-	for _, transaction := range req.GetTransactions() {
+	for _, transaction := range req.GetPayload().GetTransactions() {
 
 		// map request location to interop.FinancialLocation
-		location := &interop.Location{
+		location := &interop.FinancialLocation{
 			Address: transaction.GetLocation().GetAddress(),
 			City:    transaction.GetLocation().GetCity(),
 			State:   transaction.GetLocation().GetRegion(),
 			Zip:     transaction.GetLocation().GetPostalCode(),
 		}
 
-		paymentMeta := &interop.PaymentMeta{
+		paymentMeta := &interop.FinancialPaymentMeta{
 			ByOrderOf: transaction.GetPaymentMeta().GetByOrderOf(),
 		}
 

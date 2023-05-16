@@ -83,6 +83,8 @@ type FinancialData = propertyProsFinanceApi.FinancialData
 type Account = propertyProsFinanceApi.Account
 type Balance = propertyProsFinanceApi.Balance
 type Transaction = propertyProsFinanceApi.Transaction
+type Location = propertyProsFinanceApi.Location
+type PaymentMeta = propertyProsFinanceApi.PaymentMeta
 
 type SaveFinancialItemRequest = propertyProsFinanceApi.SaveFinancialItemRequest
 type SaveFinancialItemResponse = propertyProsFinanceApi.SaveFinancialItemResponse
@@ -90,5 +92,5 @@ type SaveFinancialItemResponse = propertyProsFinanceApi.SaveFinancialItemRespons
 // type GetFinancialItemRequest = propertyProsFinanceApi.GetFinancialItemRequest
 // type GetFinancialItemResponse = propertyProsFinanceApi.GetFinancialItemResponse
 
-// type GetFinancialItemsRequest = propertyProsFinanceApi.GetFinancialItemsRequest
-// type GetFinancialItemsResponse = propertyProsFinanceApi.GetFinancialItemsResponse
+type GetFinancialItemsRequest = propertyProsFinanceApi.GetFinancialItemsRequest
+type GetFinancialItemsResponse = propertyProsFinanceApi.GetFinancialItemsResponse

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
@@ -71,7 +72,7 @@ func (c *NotePurchaseAgreementController) SaveNotePurchaseAgreement(ctx context.
 	response = &interop.SaveNotePurchaseAgreementResponse{}
 
 	result, err := c.notePurchaseAgreementService.Save(ctx, req.Payload)
-
+	fmt.Printf("user id: %v", result.User.Id)
 	if err != nil {
 		return response, err
 	}
