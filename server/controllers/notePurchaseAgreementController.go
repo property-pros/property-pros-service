@@ -2,7 +2,10 @@ package controllers
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
+	"github.com/vireocloud/property-pros-service/constants"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
 )
@@ -40,7 +43,12 @@ func (c *NotePurchaseAgreementController) GetNotePurchaseAgreements(ctx context.
 
 	response := &interop.GetNotePurchaseAgreementsResponse{}
 
-	result, err := c.notePurchaseAgreementService.GetNotePurchaseAgreements(ctx)
+	usrID := fmt.Sprintf("%v", ctx.Value(constants.UserIdKey))
+	if usrID == "" {
+		return nil, errors.New("unresolved userid")
+	}
+
+	result, err := c.notePurchaseAgreementService.GetNotePurchaseAgreements(ctx, usrID)
 
 	if err != nil {
 		return response, err
