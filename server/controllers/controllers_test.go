@@ -64,7 +64,7 @@ func (mock *MockTestAgreementsService) GetNotePurchaseAgreement(context.Context,
 	return args.Get(0).(*interop.NotePurchaseAgreement), args.Error(1)
 }
 
-func (mock *MockTestAgreementsService) GetNotePurchaseAgreements(context.Context) ([]*interop.NotePurchaseAgreement, error) {
+func (mock *MockTestAgreementsService) GetNotePurchaseAgreements(context.Context, string) ([]*interop.NotePurchaseAgreement, error) {
 	args := mock.Called()
 
 	return args.Get(0).([]*interop.NotePurchaseAgreement), args.Error(1)

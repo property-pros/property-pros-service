@@ -2,12 +2,9 @@ package agreements
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/vireocloud/property-pros-service/constants"
 	"github.com/vireocloud/property-pros-service/data"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
@@ -68,13 +65,8 @@ func (g *NotePurchaseAgreementGateway) SaveNotePurchaseAgreement(ctx context.Con
 	return agreement, nil
 }
 
-func (g *NotePurchaseAgreementGateway) Getall(ctx context.Context) ([]*interop.NotePurchaseAgreement, error) {
+func (g *NotePurchaseAgreementGateway) Getall(ctx context.Context, usrID string) ([]*interop.NotePurchaseAgreement, error) {
 	agreements := make([]*interop.NotePurchaseAgreement, 0)
-
-	usrID := fmt.Sprintf("%v", ctx.Value(constants.UserIdKey))
-	if usrID == "" {
-		return nil, errors.New("unresolved userid")
-	}
 
 	npas := g.npaRepository.Query(&data.NotePurchaseAgreement{
 		UserId: usrID,
