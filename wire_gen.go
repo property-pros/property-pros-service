@@ -35,17 +35,18 @@ func Bootstrap() (*bootstrap.App, error) {
 	interfacesIRepository := data.NewUsersRepository(db)
 	notePurchaseAgreementGateway := agreements.NewNotePurchaseAgreementGateway(iRepository, interfacesIRepository, iNotePurchaseAgreementModelFactory)
 	iUsersGateway := users.NewUsersGateway(interfacesIRepository)
-	notePurchaseAgreementServiceClient := documents.NewDocClientMock()
+	configConfig, err := config.NewConfig()
+	if err != nil {
+		return nil, err
+	}
+	clientConnInterface := bootstrap.NewGrpcConnection(configConfig)
+	notePurchaseAgreementServiceClient := bootstrap.NewNotePurchaseAgreementClient(clientConnInterface)
 	iDocUploader := awss3.NewClient()
 	documentContentService := documents.NewDocumentContentService(notePurchaseAgreementServiceClient, iDocUploader)
 	iAgreementsService := agreements.NewNotePurchaseAgreementService(iNotePurchaseAgreementModelFactory, notePurchaseAgreementGateway, iUsersGateway, documentContentService)
 	iUsersService := users.NewUsersService(iUsersGateway)
 	notePurchaseAgreementController := controllers.NewNotePurchaseAgreementController(iAgreementsService, iUsersService)
 	authController := controllers.NewAuthController(iAgreementsService, iUsersService)
-	configConfig, err := config.NewConfig()
-	if err != nil {
-		return nil, err
-	}
 	propertyProsApiController := interceptors.NewController(iAgreementsService, iUsersService)
 	consumerDrivenContractTestingInterceptor := interceptors.NewConsumerDrivenContractTestingInterceptor(propertyProsApiController)
 	authValidationInterceptor, err := provideAuthenticationInterceptor(iUsersService)
@@ -76,7 +77,7 @@ func main() {
 
 var UserSet wire.ProviderSet = wire.NewSet(data.NewUsersRepository, users.NewUserModel, NewUserModelFactory, users.NewUsersGateway, users.NewUsersService, controllers.NewAuthController)
 
-var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(data.NewGormDatabase, awss3.NewClient, data.NewAgreementsRepository, NewNotePurchaseAgreementModelFactory, agreements.NewNotePurchaseAgreementGateway, bootstrap.NewGrpcConnection, documents.NewDocClientMock, documents.NewDocumentContentService, agreements.NewNotePurchaseAgreementService, controllers.NewNotePurchaseAgreementController)
+var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(data.NewGormDatabase, awss3.NewClient, data.NewAgreementsRepository, NewNotePurchaseAgreementModelFactory, agreements.NewNotePurchaseAgreementGateway, bootstrap.NewGrpcConnection, bootstrap.NewNotePurchaseAgreementClient, documents.NewDocumentContentService, agreements.NewNotePurchaseAgreementService, controllers.NewNotePurchaseAgreementController)
 
 var StatementSet wire.ProviderSet = wire.NewSet(data.NewStatementsRepository, controllers.NewNotePurchaseAgreementController)
 
