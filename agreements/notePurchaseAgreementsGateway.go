@@ -65,22 +65,21 @@ func (g *NotePurchaseAgreementGateway) SaveNotePurchaseAgreement(ctx context.Con
 	return agreement, nil
 }
 
-func (g *NotePurchaseAgreementGateway) Getall(ctx context.Context) ([]interfaces.IAgreementModel, error) {
-	return nil, nil
-	// results := g.repository.Query(nil)
-	// models := []interfaces.IAgreementModel{}
+func (g *NotePurchaseAgreementGateway) Getall(ctx context.Context, usrID string) ([]*interop.NotePurchaseAgreement, error) {
+	agreements := make([]*interop.NotePurchaseAgreement, 0)
 
-	// for _, result := range results {
-	// 	model, err := g.factory.NewPurchaseAgreementModel(ctx, result)
+	npas := g.npaRepository.Query(&data.NotePurchaseAgreement{
+		UserId: usrID,
+	})
 
-	// 	if err != nil {
-	// 		return models, err
-	// 	}
+	for _, npa := range npas {
+		agreements = append(agreements, &interop.NotePurchaseAgreement{
+			Id:        npa.Id,
+			CreatedOn: npa.CreatedOn.Format(time.RFC3339),
+		})
+	}
 
-	// 	models = append(models, model)
-	// }
-
-	// return models, nil
+	return agreements, nil
 }
 
 func (g *NotePurchaseAgreementGateway) FindOne(ctx context.Context, payload interfaces.IModelPayload) (npaRecord *interop.NotePurchaseAgreement, docURL string, err error) {
