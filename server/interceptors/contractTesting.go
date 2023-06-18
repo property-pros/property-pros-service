@@ -68,7 +68,7 @@ func (interceptor *ConsumerDrivenContractTestingInterceptor) Test(ctx context.Co
 		}
 	}
 
-	return nil, fmt.Errorf("not a test")
+	return handler(ctx, req)
 }
 
 func cleanMethod(grpcMethodName string) string {

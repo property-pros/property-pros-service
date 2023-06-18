@@ -6,8 +6,11 @@ import (
 )
 
 func NewGormDatabase() (*gorm.DB, error) {
-	postgresConfig := postgres.Open("host=db port=5432 user=postgres dbname=PropertyPros password=postgres")
+	// for docker compose
+	// postgresConfig := postgres.Open("host=db port=5432 user=postgres dbname=PropertyPros password=postgres")
 
+	// for local
+	postgresConfig := postgres.Open("host=localhost port=5432 user=postgres dbname=PropertyPros password=postgres")
 	db, err := gorm.Open(postgresConfig, &gorm.Config{})
 
 	if err != nil {

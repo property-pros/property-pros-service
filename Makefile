@@ -6,6 +6,9 @@ dev-init:
 	docker-compose up --build
 dev:
 	docker-compose up
+reset-db:
+	docker-compose rm -f -s -v db
+	docker-compose up -d db
 lint:
 	go vet ./...
 	go fmt ./...

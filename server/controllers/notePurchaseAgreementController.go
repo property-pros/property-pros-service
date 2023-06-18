@@ -75,7 +75,7 @@ func (c *NotePurchaseAgreementController) GetNotePurchaseAgreement(ctx context.C
 }
 
 func (c *NotePurchaseAgreementController) SaveNotePurchaseAgreement(ctx context.Context, req *interop.SaveNotePurchaseAgreementRequest) (response *interop.SaveNotePurchaseAgreementResponse, errResult error) {
-
+fmt.Println("SaveNotePurchaseAgreement called")
 	response = &interop.SaveNotePurchaseAgreementResponse{}
 
 	result, err := c.notePurchaseAgreementService.Save(ctx, req.Payload)

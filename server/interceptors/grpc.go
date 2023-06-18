@@ -2,6 +2,7 @@ package interceptors
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"google.golang.org/grpc"
@@ -26,11 +27,14 @@ func NewGrpcInterceptor(authService interfaces.IUsersService,
 }
 
 func (i *GrpcInterceptor) HandleRequest(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	fmt.Println("HandleRequest started")
 	testResult, err := i.testRequestHandler.Test(ctx, req, info, handler)
 
 	if err != nil {
+		fmt.Println("HandleRequest auth validating")
 		return i.authValidationRequestHandler.Validate(ctx, req, info, handler)
 	}
 
+	fmt.Println("HandleRequest returning test result")
 	return testResult, err
 }

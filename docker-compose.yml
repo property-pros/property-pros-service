@@ -31,7 +31,6 @@ services:
       - trace=true
       - JAVA_TOOL_OPTIONS=-Dcom.amazonaws.sdk.disableCbor=true
 
-    command: ["--hostname=my-bucket-name.localhost"]
     volumes:
       - ./s3mock_data:/data    
 volumes:
