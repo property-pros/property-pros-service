@@ -61,4 +61,4 @@ require (
 
 replace github.com/omeid/uconfig => github.com/vireocloud/uconfig v0.4.0
 
-// replace github.com/vireocloud/property-pros-sdk => ../property-pros-sdk
+replace github.com/vireocloud/property-pros-sdk => ../property-pros-sdk

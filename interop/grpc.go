@@ -70,5 +70,6 @@ type StatementServiceClient = propertyProsStatementApi.StatementServiceClient
 var NewStatementServiceClient = propertyProsStatementApi.NewStatementServiceClient
 
 var RegisterStatementServiceHandlerFromEndpoint = propertyProsStatementApi.RegisterStatementServiceHandlerFromEndpoint
+var RegisterStatementServiceServer = propertyProsStatementApi.RegisterStatementServiceServer
 
 type CallOption = grpc.CallOption

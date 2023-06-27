@@ -2,6 +2,7 @@ package agreements
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -71,7 +72,8 @@ func (g *NotePurchaseAgreementGateway) Getall(ctx context.Context, usrID string)
 	npas := g.npaRepository.Query(&data.NotePurchaseAgreement{
 		UserId: usrID,
 	})
-
+	log.Printf("id: %+v", usrID)
+	log.Printf("npas: %+v", npas)
 	for _, npa := range npas {
 		agreements = append(agreements, &interop.NotePurchaseAgreement{
 			Id:        npa.Id,

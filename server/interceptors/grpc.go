@@ -35,6 +35,6 @@ func (i *GrpcInterceptor) HandleRequest(ctx context.Context, req interface{}, in
 		return i.authValidationRequestHandler.Validate(ctx, req, info, handler)
 	}
 
-	fmt.Println("HandleRequest returning test result")
+	fmt.Printf("HandleRequest returning test result; Test err: %v", err)
 	return testResult, err
 }

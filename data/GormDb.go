@@ -1,6 +1,9 @@
 package data
 
 import (
+	"fmt"
+	"time"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -19,10 +22,45 @@ func NewGormDatabase() (*gorm.DB, error) {
 
 	db.AutoMigrate(&User{})
 	db.AutoMigrate(&NotePurchaseAgreement{})
+	db.AutoMigrate(&Statement{})
+
+	statementFixture(db)
 
 	return db, nil
 }
 
-func CreateFixtures(string) {
+func statementFixture(db *gorm.DB) {
 
+	email := "srt0422@yahoo.com"
+	userID := "1234567890"
+
+	principle := 100000.0
+	rate := 0.04 / 12 // monthly interest rate
+	balance := principle
+	totalIncome := 0.0
+
+	for i := 0; i < 3; i++ {
+		startDate := time.Now().AddDate(0, -i-1, 0) // start of previous month
+		endDate := time.Now().AddDate(0, -i, 0)     // end of previous month
+
+		startDate = time.Date(startDate.Year(), startDate.Month(), 1, 0, 0, 0, 0, time.UTC) // first day of previous month
+		endDate = time.Date(endDate.Year(), endDate.Month()+1, 0, 0, 0, 0, 0, time.UTC)     // last day of previous month
+
+		income := balance * rate // monthly interest income
+		balance += income        // new balance after interest
+		totalIncome += income    // cumulative income
+
+		statement := Statement{
+			Id:              fmt.Sprintf("%s-%d", userID, i+1),
+			UserId:          userID,
+			EmailAddress:    email,
+			StartPeriodDate: startDate.Format("2006-01-02"),
+			EndPeriodDate:   endDate.Format("2006-01-02"),
+			Balance:         fmt.Sprintf("%.2f", balance),
+			TotalIncome:     fmt.Sprintf("%.2f", totalIncome),
+			Principle:       fmt.Sprintf("%.2f", principle),
+		}
+
+		db.FirstOrCreate(&statement, Statement{Id: statement.Id})
+	}
 }
