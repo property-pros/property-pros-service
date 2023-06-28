@@ -79,7 +79,7 @@ func main() {
 
 var UserSet wire.ProviderSet = wire.NewSet(data.NewUsersRepository, users.NewUserModel, NewUserModelFactory, users.NewUsersGateway, users.NewUsersService, controllers.NewAuthController)
 
-var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(data.NewGormDatabase, awss3.NewClient, data.NewAgreementsRepository, NewNotePurchaseAgreementModelFactory, agreements.NewNotePurchaseAgreementGateway, bootstrap.NewGrpcConnection, bootstrap.NewNotePurchaseAgreementClient, documents.NewDocumentContentService, agreements.NewNotePurchaseAgreementService, controllers.NewNotePurchaseAgreementController)
+var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(data.NewGormDatabase, awss3.NewClient, data.NewAgreementsRepository, agreements.NewNotePurchaseAgreementModel, NewNotePurchaseAgreementModelFactory, agreements.NewNotePurchaseAgreementGateway, bootstrap.NewGrpcConnection, bootstrap.NewNotePurchaseAgreementClient, documents.NewDocumentContentService, agreements.NewNotePurchaseAgreementService, controllers.NewNotePurchaseAgreementController)
 
 var StatementSet wire.ProviderSet = wire.NewSet(data.NewStatementsRepository, common.NewLogger, controllers.NewStatementController)
 

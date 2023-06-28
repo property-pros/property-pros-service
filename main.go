@@ -49,7 +49,7 @@ var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(
 	awss3.NewClient,
 	data.NewAgreementsRepository,
 
-	// agreements.NewNotePurchaseAgreementModel,
+	agreements.NewNotePurchaseAgreementModel,
 	NewNotePurchaseAgreementModelFactory,
 	agreements.NewNotePurchaseAgreementGateway,
 	bootstrap.NewGrpcConnection,
@@ -61,13 +61,6 @@ var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(
 var StatementSet wire.ProviderSet = wire.NewSet(
 	data.NewStatementsRepository,
 	common.NewLogger,
-	// agreements.NewNotePurchaseAgreementGateway,
-	// agreements.NewNotePurchaseAgreementModel,
-	// NewNotePurchaseAgreementModelFactory,
-	// bootstrap.NewGrpcConnection,
-	// bootstrap.NewNotePurchaseAgreementClient,
-	// documents.NewDocumentContentManager,
-	// agreements.NewNotePurchaseAgreementService,
 	controllers.NewStatementController)
 
 func Bootstrap() (*bootstrap.App, error) {

@@ -28,7 +28,6 @@ func NewGormDatabase() (*gorm.DB, error) {
 
 	return db, nil
 }
-
 func statementFixture(db *gorm.DB) {
 
 	email := "srt0422@yahoo.com"
@@ -54,11 +53,11 @@ func statementFixture(db *gorm.DB) {
 			Id:              fmt.Sprintf("%s-%d", userID, i+1),
 			UserId:          userID,
 			EmailAddress:    email,
-			StartPeriodDate: startDate.Format("2006-01-02"),
-			EndPeriodDate:   endDate.Format("2006-01-02"),
-			Balance:         fmt.Sprintf("%.2f", balance),
-			TotalIncome:     fmt.Sprintf("%.2f", totalIncome),
-			Principle:       fmt.Sprintf("%.2f", principle),
+			StartPeriodDate: startDate,
+			EndPeriodDate:   endDate,
+			Balance:         balance,
+			TotalIncome:     totalIncome,
+			Principle:       principle,
 		}
 
 		db.FirstOrCreate(&statement, Statement{Id: statement.Id})

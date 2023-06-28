@@ -22,9 +22,10 @@ type Config struct {
 	ListenAddress                 string `env:"LISTEN_ADDRESS" flag:"listen-address" desc:"grpc server listening address host" validate:"required,ip4_addr"`
 	ListenPort                    string `env:"LISTEN_PORT" flag:"listen-port" desc:"grpc server listening address host:port" validate:"required,number"`
 	AppEnv                        string `env:"APP_ENV" flag:"app-env" desc:"generic flag to describe the runtime environment dev/prod" validate:"required"`
-	S3Endpoint                    string `env:"S3_ENDPOINT" flag:"s3-endpoint" desc:"s3 endpoint" validate:"required,hostname_port"`
+	S3Endpoint                    string `env:"S3_ENDPOINT" flag:"s3-endpoint" desc:"s3 endpoint" validate:"required,url"`
+
 	S3AccessKey                   string `env:"S3_ACCESS_KEY" flag:"s3-access-key" desc:"s3 access key" validate:"required"`
-	S3PrivateKey                  string `env:"S3_PRIVATE_KEY" flag:"s3-private-key" desc:"s3 private key" validate:"required"`
+	S3PrivateKey                  string `env:"S3_SECRET_KEY" flag:"s3-private-key" desc:"s3 private key" validate:"required"`
 }
 
 func NewConfig() (*Config, error) {
