@@ -9,8 +9,8 @@ type Statement struct {
 	Id              string `json:"id,omitempty" gorm:"primaryKey"`
 	UserId          string `json:"userid" gorm:"column:user_id"`
 	EmailAddress    string `json:"email_address" gorm:"column:email_address"`
-	StartPeriodDate string `json:"start_period_date" gorm:"column:start_period_date"`
-	EndPeriodDate   string `json:"end_period_date" gorm:"column:end_period_date"`
+	StartPeriodDate time.Time `json:"start_period_date" gorm:"column:start_period_date"`
+	EndPeriodDate   time.Time `json:"end_period_date" gorm:"column:end_period_date"`
 	Balance         string `json:"balance" gorm:"column:balance"`
 	TotalIncome     string `json:"total_income" gorm:"column:total_income"`
 	Principle       string `json:"principle" gorm:"column:principle"`
