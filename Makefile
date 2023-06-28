@@ -1,7 +1,8 @@
 run:
-	wire && go run wire_gen.go
+	wire
+	go run wire_gen.go
 watch:
-	reflex -c reflex.conf
+	reflex -c reflex.conf -v
 dev-init:
 	go mod tidy
 	docker-compose down --remove-orphans

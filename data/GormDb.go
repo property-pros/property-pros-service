@@ -4,16 +4,17 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/vireocloud/property-pros-service/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-func NewGormDatabase() (*gorm.DB, error) {
+func NewGormDatabase(config *config.Config ) (*gorm.DB, error) {
 	// for docker compose
 	// postgresConfig := postgres.Open("host=db port=5432 user=postgres dbname=PropertyPros password=postgres")
 
 	// for local
-	postgresConfig := postgres.Open("host=localhost port=5432 user=postgres dbname=PropertyPros password=postgres")
+	postgresConfig := postgres.Open(config.DbConnectionString)
 	db, err := gorm.Open(postgresConfig, &gorm.Config{})
 
 	if err != nil {
