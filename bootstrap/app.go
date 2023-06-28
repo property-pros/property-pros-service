@@ -261,8 +261,8 @@ func getOpenAPIHandler() http.Handler {
 }
 
 func NewGrpcConnection(config *config.Config) grpc.ClientConnInterface {
-	// connection, err := grpc.Dial(config.DocumentContentProviderSource, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	connection, err := grpc.Dial("localhost:8020", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	connection, err := grpc.Dial(config.DocumentContentProviderSource, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// connection, err := grpc.Dial("localhost:8020", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic(fmt.Errorf("NewGrpcConnection failed: %w", err))
 	}
