@@ -11,9 +11,9 @@ type Statement struct {
 	EmailAddress    string `json:"email_address" gorm:"column:email_address"`
 	StartPeriodDate time.Time `json:"start_period_date" gorm:"column:start_period_date"`
 	EndPeriodDate   time.Time `json:"end_period_date" gorm:"column:end_period_date"`
-	Balance         string `json:"balance" gorm:"column:balance"`
-	TotalIncome     string `json:"total_income" gorm:"column:total_income"`
-	Principle       string `json:"principle" gorm:"column:principle"`
+	Balance         float64 `json:"balance" gorm:"column:balance"`
+	TotalIncome     float64 `json:"total_income" gorm:"column:total_income"`
+	Principle       float64 `json:"principle" gorm:"column:principle"`
 }
 
 func (n *Statement) GetId() string {
