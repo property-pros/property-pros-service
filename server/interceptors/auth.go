@@ -3,6 +3,7 @@ package interceptors
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/vireocloud/property-pros-service/constants"
 	"github.com/vireocloud/property-pros-service/interfaces"
@@ -29,13 +30,18 @@ func NewAuthValidationInterceptor(authService interfaces.IUsersService, authMeth
 func (validator *AuthValidationInterceptor) Validate(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	fmt.Printf("full method: %v; registration method: %v; auth method: %v", info.FullMethod, validator.registrationMethod, validator.authMethod)
 	if info.FullMethod != validator.registrationMethod && info.FullMethod != validator.authMethod {
+		log.Printf("authenticating: %v", info.FullMethod)
 		md, ok := metadata.FromIncomingContext(ctx)
 
 		if !ok {
 			return nil, status.Error(codes.Unauthenticated, fmt.Sprintf("%v Failed;  Could not read metadata from context", info.FullMethod))
 		}
 
-		token := md.Get("authorization")[0]
+		authMetadata := md.Get("authorization")
+
+		log.Printf("auth metadata: %+v", authMetadata);
+
+		token := authMetadata[0]
 		userId := validator.authService.UserIdIfValidToken(ctx, token)
 		if userId != "" {
 			ctxWithUserId := context.WithValue(ctx, constants.UserIdKey, userId)

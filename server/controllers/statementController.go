@@ -3,9 +3,11 @@ package controllers
 import (
 	"context"
 
-	"github.com/vireocloud/property-pros-sdk/api/statement/v1"
+	"github.com/vireocloud/property-pros-service/common"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type StatementController struct {
@@ -14,6 +16,7 @@ type StatementController struct {
 	authService      interfaces.IUsersService
 	statementService interfaces.IAgreementsService
 	statementsRepo   interfaces.IStatementsRepository
+	logger           *common.Logger
 }
 
 func statementToRecordResult(statement *interop.Statement) *interop.RecordResultPayload {
@@ -35,19 +38,25 @@ func statementListToRecordCollection(result []interfaces.IAgreementModel) *inter
 }
 
 func (c *StatementController) GetStatements(ctx context.Context, req *interop.GetStatementsRequest) (*interop.GetStatementsResponse, error) {
+	c.logger.Info("Received GetStatements request")
+
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "UserId is required")
+	}
 
 	response := &interop.GetStatementsResponse{}
 
 	query := &interop.Statement{UserId: req.GetUserId()}
 
-	// response.Statements = c.statementsRepo.Query(query)
+	results := c.statementsRepo.Query(query)
 
-	response.Statements = []*statement.Statement{
-		{UserId: query.UserId},
-	}
+	response.Payload.Statements = results
+
+	c.logger.Info("Returning GetStatements response - StatementsCount: %v", len(results))
 
 	return response, nil
 }
+
 
 // func (c *StatementController) GetStatement(ctx context.Context, req *interop.GetStatementRequest) (*interop.GetStatementResponse, error) {
 

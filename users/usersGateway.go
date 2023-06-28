@@ -61,7 +61,11 @@ func (gateway *UsersGateway) SaveUser(ctx context.Context, agreement *interop.No
 		return nil, err
 	}
 
-	agreement.User.Id = user.Id
+	agreementResultValue := *agreement
+
+	agreementResult := &agreementResultValue
+
+	agreementResult.User.Id = user.Id
 
 	return agreement, nil
 }

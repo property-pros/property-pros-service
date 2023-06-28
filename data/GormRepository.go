@@ -84,7 +84,6 @@ func (repo *GormRepository[T, PT]) Query(query *T) []*T {
 
 	var results interface{} = []*T{}
 
-	// whereResult := repo.db.Where()
 	repo.db.Debug().Find(&results, query)
 
 	return results.([]*T)

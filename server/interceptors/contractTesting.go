@@ -25,7 +25,7 @@ func NewConsumerDrivenContractTestingInterceptor(controller *PropertyProsApiCont
 	}
 }
 
-func (interceptor *ConsumerDrivenContractTestingInterceptor) Test(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (interceptor *ConsumerDrivenContractTestingInterceptor) Test(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (result interface{}, err error) {
 
 	fmt.Println("full method: ", info.FullMethod)
 
@@ -68,7 +68,7 @@ func (interceptor *ConsumerDrivenContractTestingInterceptor) Test(ctx context.Co
 		}
 	}
 
-	return nil, fmt.Errorf("not a test")
+	return result, fmt.Errorf("this is not a test")
 }
 
 func cleanMethod(grpcMethodName string) string {

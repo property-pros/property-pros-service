@@ -25,7 +25,8 @@ var AWS_BUCKET = "documents"
 func NewClient() interfaces.IDocUploader {
 	sess := session.Must(session.NewSession(&aws.Config{
 		// TODO: move to config
-		Endpoint:    aws.String("http://s3mock:9090"),
+		Endpoint:    aws.String("http://localhost:9090"),
+		// Endpoint:    aws.String("http://s3mock:9090"),
 		Region:      aws.String("us-west-2"),
 		Credentials: credentials.NewStaticCredentials("accessKey", "secretKey", ""),
 		// needed for local docker image, should work for aws s3 too
