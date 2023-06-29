@@ -28,7 +28,11 @@ import (
 
 func Bootstrap() (*bootstrap.App, error) {
 	iNotePurchaseAgreementModelFactory := NewNotePurchaseAgreementModelFactory()
-	db, err := data.NewGormDatabase()
+	configConfig, err := config.NewConfig()
+	if err != nil {
+		return nil, err
+	}
+	db, err := data.NewGormDatabase(configConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -36,10 +40,6 @@ func Bootstrap() (*bootstrap.App, error) {
 	interfacesIRepository := data.NewUsersRepository(db)
 	notePurchaseAgreementGateway := agreements.NewNotePurchaseAgreementGateway(iRepository, interfacesIRepository, iNotePurchaseAgreementModelFactory)
 	iUsersGateway := users.NewUsersGateway(interfacesIRepository)
-	configConfig, err := config.NewConfig()
-	if err != nil {
-		return nil, err
-	}
 	clientConnInterface := bootstrap.NewGrpcConnection(configConfig)
 	notePurchaseAgreementServiceClient := bootstrap.NewNotePurchaseAgreementClient(clientConnInterface)
 	iDocUploader := awss3.NewClient()

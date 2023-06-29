@@ -36,6 +36,26 @@ func statementListToRecordCollection(result []interfaces.IAgreementModel) *inter
 
 	return recordCollection
 }
+func (c *StatementController) GetStatements(ctx context.Context, req *interop.GetStatementsRequest) (*interop.GetStatementsResponse, error) {
+	c.logger.Info("Received GetStatements request")
+
+	query := &interop.Statement{UserId: req.UserId}
+
+	results, err := c.statementsRepo.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &interop.GetStatementsResponse{
+		Payload: &interop.StatementsPayload{
+			Statements: results,
+		},
+	}
+
+	c.logger.Printf("Returning GetStatements response - StatementsCount: %v", len(results))
+
+	return response, nil
+}
 
 func (c *StatementController) GetStatements(ctx context.Context, req *interop.GetStatementsRequest) (*interop.GetStatementsResponse, error) {
 	c.logger.Info("Received GetStatements request")
