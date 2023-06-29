@@ -64,11 +64,13 @@ type UnimplementedStatementServiceServer = propertyProsStatementApi.Unimplemente
 type Statement = propertyProsStatementApi.Statement
 type GetStatementsRequest = propertyProsStatementApi.GetStatementsRequest
 type GetStatementsResponse = propertyProsStatementApi.GetStatementsResponse
+type StatementsPayload = propertyProsStatementApi.StatementsPayload
 
 type StatementServiceClient = propertyProsStatementApi.StatementServiceClient
 
 var NewStatementServiceClient = propertyProsStatementApi.NewStatementServiceClient
 
 var RegisterStatementServiceHandlerFromEndpoint = propertyProsStatementApi.RegisterStatementServiceHandlerFromEndpoint
+var RegisterStatementServiceServer = propertyProsStatementApi.RegisterStatementServiceServer
 
 type CallOption = grpc.CallOption

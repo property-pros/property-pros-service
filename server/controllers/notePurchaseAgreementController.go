@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/vireocloud/property-pros-service/constants"
 	"github.com/vireocloud/property-pros-service/interfaces"
@@ -43,13 +44,16 @@ func (c *NotePurchaseAgreementController) GetNotePurchaseAgreements(ctx context.
 
 	response := &interop.GetNotePurchaseAgreementsResponse{}
 
-	usrID := fmt.Sprintf("%v", ctx.Value(constants.UserIdKey))
-	if usrID == "" {
+	userIdFromContext := ctx.Value(constants.UserIdKey)
+
+	if userIdFromContext == nil {
 		return nil, errors.New("unresolved userid")
 	}
 
-	result, err := c.notePurchaseAgreementService.GetNotePurchaseAgreements(ctx, usrID)
+	usrID := fmt.Sprintf("%v", userIdFromContext)
 
+	result, err := c.notePurchaseAgreementService.GetNotePurchaseAgreements(ctx, usrID)
+	log.Printf("note purchase agreement results: %+v", result)
 	if err != nil {
 		return response, err
 	}
@@ -75,10 +79,11 @@ func (c *NotePurchaseAgreementController) GetNotePurchaseAgreement(ctx context.C
 }
 
 func (c *NotePurchaseAgreementController) SaveNotePurchaseAgreement(ctx context.Context, req *interop.SaveNotePurchaseAgreementRequest) (response *interop.SaveNotePurchaseAgreementResponse, errResult error) {
-
+	payloadValue := *req.GetPayload()
+	fmt.Printf("SaveNotePurchaseAgreement called; \r\n\n payload: %+v \n\n", &payloadValue)
 	response = &interop.SaveNotePurchaseAgreementResponse{}
 
-	result, err := c.notePurchaseAgreementService.Save(ctx, req.Payload)
+	result, err := c.notePurchaseAgreementService.Save(ctx, &payloadValue)
 
 	if err != nil {
 		return response, err

@@ -41,15 +41,18 @@ type App struct {
 	Config                          *config.Config
 	AuthController                  *controllers.AuthController
 	NotePurchaseAgreementController *controllers.NotePurchaseAgreementController
-	apiInterceptor                  *interceptors.AuthValidationInterceptor
-	grpcInterceptor                 *interceptors.GrpcInterceptor
+	StatementController             *controllers.StatementController
+
+	apiInterceptor  *interceptors.AuthValidationInterceptor
+	grpcInterceptor *interceptors.GrpcInterceptor
 }
 
-func NewApp(notePurchaseAgreementController *controllers.NotePurchaseAgreementController, authController *controllers.AuthController, configuration *config.Config, grpcInterceptor *interceptors.GrpcInterceptor, authInterceptor *interceptors.AuthValidationInterceptor) *App {
+func NewApp(notePurchaseAgreementController *controllers.NotePurchaseAgreementController, authController *controllers.AuthController, statementController *controllers.StatementController, configuration *config.Config, grpcInterceptor *interceptors.GrpcInterceptor, authInterceptor *interceptors.AuthValidationInterceptor) *App {
 
 	return &App{
 		AuthController:                  authController,
 		NotePurchaseAgreementController: notePurchaseAgreementController,
+		StatementController:             statementController,
 		Config:                          configuration,
 		grpcInterceptor:                 grpcInterceptor,
 		apiInterceptor:                  authInterceptor,
@@ -130,6 +133,7 @@ func (*App) LogAvailableGrpcMethods(grpcServer *grpc.Server) error {
 func (a *App) registerControllers(grpcServer *grpc.Server, ctx context.Context, gwmux *runtime.ServeMux, dialUrl string, dopts []grpc.DialOption) error {
 	interop.RegisterNotePurchaseAgreementServiceServer(grpcServer, a.NotePurchaseAgreementController)
 	interop.RegisterAuthenticationServiceServer(grpcServer, a.AuthController)
+	interop.RegisterStatementServiceServer(grpcServer, a.StatementController)
 
 	err := interop.RegisterNotePurchaseAgreementServiceHandlerFromEndpoint(ctx, gwmux, dialUrl, dopts)
 
@@ -140,6 +144,12 @@ func (a *App) registerControllers(grpcServer *grpc.Server, ctx context.Context, 
 
 	err = interop.RegisterAuthenticationServiceHandlerFromEndpoint(ctx, gwmux, dialUrl, dopts)
 
+	if err != nil {
+		grpclog.Fatalf("failed starting http server: %v", err)
+		return err
+	}
+
+	err = interop.RegisterStatementServiceHandlerFromEndpoint(ctx, gwmux, dialUrl, dopts)
 	if err != nil {
 		grpclog.Fatalf("failed starting http server: %v", err)
 		return err
@@ -252,7 +262,7 @@ func getOpenAPIHandler() http.Handler {
 
 func NewGrpcConnection(config *config.Config) grpc.ClientConnInterface {
 	connection, err := grpc.Dial(config.DocumentContentProviderSource, grpc.WithTransportCredentials(insecure.NewCredentials()))
-
+	// connection, err := grpc.Dial("localhost:8020", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic(fmt.Errorf("NewGrpcConnection failed: %w", err))
 	}
@@ -263,5 +273,4 @@ func NewGrpcConnection(config *config.Config) grpc.ClientConnInterface {
 func NewNotePurchaseAgreementClient(conn grpc.ClientConnInterface) interop.NotePurchaseAgreementServiceClient {
 
 	return interop.NewNotePurchaseAgreementServiceClient(conn)
-
 }

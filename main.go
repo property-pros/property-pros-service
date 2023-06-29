@@ -11,6 +11,7 @@ import (
 	"github.com/vireocloud/property-pros-service/agreements"
 	awss3 "github.com/vireocloud/property-pros-service/aws-s3"
 	"github.com/vireocloud/property-pros-service/bootstrap"
+	"github.com/vireocloud/property-pros-service/common"
 	"github.com/vireocloud/property-pros-service/config"
 	"github.com/vireocloud/property-pros-service/data"
 	"github.com/vireocloud/property-pros-service/documents"
@@ -33,7 +34,6 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("failed to run application: %w", err))
 	}
-
 }
 
 var UserSet wire.ProviderSet = wire.NewSet(
@@ -49,7 +49,7 @@ var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(
 	awss3.NewClient,
 	data.NewAgreementsRepository,
 
-	// agreements.NewNotePurchaseAgreementModel,
+	agreements.NewNotePurchaseAgreementModel,
 	NewNotePurchaseAgreementModelFactory,
 	agreements.NewNotePurchaseAgreementGateway,
 	bootstrap.NewGrpcConnection,
@@ -60,21 +60,17 @@ var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(
 
 var StatementSet wire.ProviderSet = wire.NewSet(
 	data.NewStatementsRepository,
-	// agreements.NewNotePurchaseAgreementGateway,
-	// agreements.NewNotePurchaseAgreementModel,
-	// NewNotePurchaseAgreementModelFactory,
-	// bootstrap.NewGrpcConnection,
-	// bootstrap.NewNotePurchaseAgreementClient,
-	// documents.NewDocumentContentManager,
-	// agreements.NewNotePurchaseAgreementService,
-	controllers.NewNotePurchaseAgreementController)
+	common.NewLogger,
+	controllers.NewStatementController)
 
 func Bootstrap() (*bootstrap.App, error) {
 
 	wire.Build(
 		config.NewConfig,
 		UserSet,
-		NotePuchaseAgreementSet,
+		NotePuchaseAgreementSet, 
+		StatementSet,
+		
 		provideAuthenticationInterceptor,
 		interceptors.NewConsumerDrivenContractTestingInterceptor,
 		interceptors.NewController,
