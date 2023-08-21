@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/wire"
+	"github.com/vireocloud/property-pros-sdk/api/statement/v1"
 	"github.com/vireocloud/property-pros-service/agreements"
 	"github.com/vireocloud/property-pros-service/aws-s3"
 	"github.com/vireocloud/property-pros-service/bootstrap"
@@ -42,14 +43,15 @@ func Bootstrap() (*bootstrap.App, error) {
 	iUsersGateway := users.NewUsersGateway(interfacesIRepository)
 	clientConnInterface := bootstrap.NewGrpcConnection(configConfig)
 	notePurchaseAgreementServiceClient := bootstrap.NewNotePurchaseAgreementClient(clientConnInterface)
+	statementServiceClient := statement.NewStatementServiceClient(clientConnInterface)
 	iDocUploader := awss3.NewClient()
-	documentContentService := documents.NewDocumentContentService(notePurchaseAgreementServiceClient, iDocUploader)
-	iAgreementsService := agreements.NewNotePurchaseAgreementService(iNotePurchaseAgreementModelFactory, notePurchaseAgreementGateway, iUsersGateway, documentContentService)
+	iDocumentContentService := documents.NewDocumentContentService(notePurchaseAgreementServiceClient, statementServiceClient, iDocUploader)
+	iAgreementsService := agreements.NewNotePurchaseAgreementService(iNotePurchaseAgreementModelFactory, notePurchaseAgreementGateway, iUsersGateway, iDocumentContentService)
 	iUsersService := users.NewUsersService(iUsersGateway)
 	notePurchaseAgreementController := controllers.NewNotePurchaseAgreementController(iAgreementsService, iUsersService)
 	authController := controllers.NewAuthController(iAgreementsService, iUsersService)
 	iStatementsRepository := data.NewStatementsRepository(db)
-	statementController := controllers.NewStatementController(iStatementsRepository)
+	statementController := controllers.NewStatementController(iStatementsRepository, iDocumentContentService)
 	propertyProsApiController := interceptors.NewController(iAgreementsService, iUsersService)
 	consumerDrivenContractTestingInterceptor := interceptors.NewConsumerDrivenContractTestingInterceptor(propertyProsApiController)
 	authValidationInterceptor, err := provideAuthenticationInterceptor(iUsersService)
@@ -81,7 +83,7 @@ var UserSet wire.ProviderSet = wire.NewSet(data.NewUsersRepository, users.NewUse
 
 var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(data.NewGormDatabase, awss3.NewClient, data.NewAgreementsRepository, agreements.NewNotePurchaseAgreementModel, NewNotePurchaseAgreementModelFactory, agreements.NewNotePurchaseAgreementGateway, bootstrap.NewGrpcConnection, bootstrap.NewNotePurchaseAgreementClient, documents.NewDocumentContentService, agreements.NewNotePurchaseAgreementService, controllers.NewNotePurchaseAgreementController)
 
-var StatementSet wire.ProviderSet = wire.NewSet(data.NewStatementsRepository, common.NewLogger, controllers.NewStatementController)
+var StatementSet wire.ProviderSet = wire.NewSet(data.NewStatementsRepository, common.NewLogger, interop.NewStatementServiceClient, controllers.NewStatementController)
 
 func provideAuthenticationInterceptor(authService interfaces.IUsersService) (*interceptors.AuthValidationInterceptor, error) {
 	return interceptors.NewAuthValidationInterceptor(authService, controllers.GRPC_AUTH_METHOD, controllers.GRPC_REGISTRATION_METHOD), nil

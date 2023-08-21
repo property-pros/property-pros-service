@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/vireocloud/property-pros-service/documents"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
 )
@@ -14,7 +13,7 @@ type NotePurchaseAgreementService struct {
 	factory                      interfaces.INotePurchaseAgreementModelFactory
 	notePurchaseAgreementGateway *NotePurchaseAgreementGateway
 	usersGateway                 interfaces.IUsersGateway
-	documentContentService       *documents.DocumentContentService
+	documentContentService       interfaces.IDocumentContentService
 }
 
 func (service *NotePurchaseAgreementService) GetNotePurchaseAgreementDocContent(ctx context.Context, payload interfaces.IModelPayload) ([]byte, error) {
@@ -64,6 +63,7 @@ func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement
 	resultAgreement, err := service.notePurchaseAgreementGateway.SaveNotePurchaseAgreement(ctx, agreement, docURL)
 
 	log.Printf("resultAgreement: %+#v \n\n", resultAgreement)
+	log.Printf("resultAgreement user: %+#v \n\n", resultAgreement.User)
 	log.Printf("err: %+#v \n\n", err)
 
 	if err != nil {
@@ -77,7 +77,7 @@ func NewNotePurchaseAgreementService(
 	factory interfaces.INotePurchaseAgreementModelFactory,
 	npag *NotePurchaseAgreementGateway,
 	usersGateway interfaces.IUsersGateway,
-	documentContentService *documents.DocumentContentService,
+	documentContentService interfaces.IDocumentContentService,
 ) interfaces.IAgreementsService {
 	log.Printf("factory: %+#v \n\n", factory)
 	return &NotePurchaseAgreementService{

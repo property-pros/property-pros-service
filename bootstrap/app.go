@@ -76,8 +76,8 @@ func (a *App) Run() error {
 		addr := fmt.Sprintf(":%v", port)
 
 		grpcServer := grpc.NewServer(
-			grpc.UnaryInterceptor(a.grpcInterceptor.HandleRequest),
-			grpc.UnaryInterceptor(a.apiInterceptor.Validate),
+			// grpc.UnaryInterceptor(a.grpcInterceptor.HandleRequest),
+			// grpc.UnaryInterceptor(a.apiInterceptor.Validate),
 		)
 
 		wrappedServer := grpcweb.WrapServer(grpcServer)
@@ -190,7 +190,9 @@ func grpcHandlerFunc(grpcServer *grpc.Server, grpcWebServer *grpcweb.WrappedGrpc
 func (a *App) StartInsecureServer() error {
 	wg := sync.WaitGroup{}
 
-	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(a.grpcInterceptor.HandleRequest))
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(a.grpcInterceptor.HandleRequest),
+	)
 
 	wrappedServer := grpcweb.WrapServer(grpcServer)
 
@@ -262,7 +264,7 @@ func getOpenAPIHandler() http.Handler {
 
 func NewGrpcConnection(config *config.Config) grpc.ClientConnInterface {
 	connection, err := grpc.Dial(config.DocumentContentProviderSource, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	// connection, err := grpc.Dial("localhost:8020", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	
 	if err != nil {
 		panic(fmt.Errorf("NewGrpcConnection failed: %w", err))
 	}

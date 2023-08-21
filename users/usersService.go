@@ -63,6 +63,7 @@ func (service *UsersService) GenerateBasicUserAuthToken(user *interop.User) stri
 }
 
 func NewUsersService(userGateway interfaces.IUsersGateway) interfaces.IUsersService {
+	fmt.Printf("NewUsersService - user gateway: %v\r\n", userGateway)
 	return &UsersService{userGateway: userGateway}
 }
 

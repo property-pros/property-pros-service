@@ -432,8 +432,6 @@ github.com/ugorji/go/codec v1.1.7 h1:2SvQaVZ1ouYrrKKwoSk2pzd4A9evlKJb9oTL+OaLUSs
 github.com/ugorji/go/codec v1.1.7/go.mod h1:Ax+UKWsSmolVDwsd+7N3ZtXu+yMGCf907BLYF3GoBXY=
 github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
 github.com/urfave/cli v1.22.1/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
-github.com/vireocloud/property-pros-sdk v0.0.17 h1:uOLZ42HCtfB4ut5limdEXqOovI3/t82AMJbEFXjnEdc=
-github.com/vireocloud/property-pros-sdk v0.0.17/go.mod h1:kKN/CieTHmHIs+iEcjDKgKU3xFVyYfOtTdd8yE5W4iQ=
 github.com/vireocloud/uconfig v0.4.0 h1:JXCeagyBKpdqO5boZYtGQhI6uPSZtH6WZbjW/+SI3VI=
 github.com/vireocloud/uconfig v0.4.0/go.mod h1:B1RiNz0FUscFXiJWixnGM2TVhluAYiqlcMApU6dEAAE=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=

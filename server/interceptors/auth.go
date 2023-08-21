@@ -39,7 +39,11 @@ func (validator *AuthValidationInterceptor) Validate(ctx context.Context, req in
 
 		authMetadata := md.Get("authorization")
 
-		log.Printf("auth metadata: %+v", authMetadata);
+		log.Printf("auth metadata: %+v", authMetadata[0])
+		
+		if len(authMetadata) == 0 {
+			return status.Error(codes.Unauthenticated, fmt.Sprintf("%v Failed;  No auth token", info.FullMethod)), nil
+		}
 
 		token := authMetadata[0]
 		userId := validator.authService.UserIdIfValidToken(ctx, token)

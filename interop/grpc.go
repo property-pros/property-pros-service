@@ -64,6 +64,8 @@ type UnimplementedStatementServiceServer = propertyProsStatementApi.Unimplemente
 type Statement = propertyProsStatementApi.Statement
 type GetStatementsRequest = propertyProsStatementApi.GetStatementsRequest
 type GetStatementsResponse = propertyProsStatementApi.GetStatementsResponse
+type GetStatementDocRequest = propertyProsStatementApi.GetStatementDocRequest
+type GetStatementDocResponse = propertyProsStatementApi.GetStatementDocResponse
 type StatementsPayload = propertyProsStatementApi.StatementsPayload
 
 type StatementServiceClient = propertyProsStatementApi.StatementServiceClient

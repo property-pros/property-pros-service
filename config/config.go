@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
@@ -36,11 +38,17 @@ func NewConfig() (*Config, error) {
 }
 
 func LoadConfig(cfg interface{}, osArgs *[]string) error {
-	godotenv.Load(".env")
-
+	fmt.Printf("path: %s\n", filepath.Join(os.Getenv("PROJECT_PATH"), "./.env"))
+	err := godotenv.Load(filepath.Join(os.Getenv("PROJECT_PATH"), ".env"))
+	if err != nil {
+		fmt.Printf("godotenv.Load %v\n", err)
+		return err
+	}
+	
 	// recursively iterates over each field of the nested struct
 	fields, err := flat.View(cfg)
 	if err != nil {
+		fmt.Printf("flat.ViewError %v\n", err)
 		return err
 	}
 
@@ -52,11 +60,14 @@ func LoadConfig(cfg interface{}, osArgs *[]string) error {
 		if !ok {
 			continue
 		}
+
 		envValue := os.Getenv(envName)
+
 		field.Set(envValue)
 
 		flagName, ok := field.Tag(TagFlag)
-		if !ok {
+		
+		if !ok || flagName == "test.paniconexit0" {
 			continue
 		}
 
@@ -73,8 +84,12 @@ func LoadConfig(cfg interface{}, osArgs *[]string) error {
 		args = os.Args
 	}
 
+	args = removeElements(args, []string{"-test.paniconexit0", "-test.timeout", "-test.coverprofile"})
+
+	fmt.Printf("parsing args: %+v\n", args)
 	err = flagset.Parse(args[1:])
 	if err != nil {
+		fmt.Printf("flatset.Parse %v\n", err)
 		return err
 	}
 
@@ -83,4 +98,23 @@ func LoadConfig(cfg interface{}, osArgs *[]string) error {
 		return fmt.Errorf("config validation error: %w", err)
 	}
 	return nil
+}
+
+func removeElements(args []string, elements []string) []string {
+	var result []string
+	for _, arg := range args {
+		if !contains(elements, arg) {
+			result = append(result, arg)
+		}
+	}
+	return result
+}
+
+func contains(elements []string, arg string) bool {
+	for _, e := range elements {
+		if strings.Contains(arg, e) {
+			return true
+		}
+	}
+	return false
 }

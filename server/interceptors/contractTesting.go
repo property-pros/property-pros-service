@@ -111,12 +111,11 @@ func (c *PropertyProsApiController) GetNotePurchaseAgreement(ctx context.Context
 
 func (c *PropertyProsApiController) GetNotePurchaseAgreements(ctx context.Context, req *interop.GetNotePurchaseAgreementsRequest) (response *interop.GetNotePurchaseAgreementsResponse, errResult error) {
 	return &interop.GetNotePurchaseAgreementsResponse{
-			Payload: &interop.RecordColection{
-				Payload: []*interop.RecordResultPayload{
-					{Id: uuid.New().String()},
-				},
+			Payload: []*interop.RecordResultPayload{
+				{Id: uuid.New().String()},
 			},
 		},
+
 		nil
 }
 

@@ -2,6 +2,7 @@ package agreements
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -91,14 +92,14 @@ func (g *NotePurchaseAgreementGateway) FindOne(ctx context.Context, payload inte
 
 	npa, err := g.npaRepository.FindOne(&npaReqModel)
 	if err != nil {
-		return nil, "", err
+		return nil, "", fmt.Errorf("error finding note purchase agreement: %w", err)
 	}
 
 	usr, err := g.userRepository.FindOne(&data.User{
 		Id: npa.UserId,
 	})
 	if err != nil {
-		return nil, "", err
+		return nil, "", fmt.Errorf("error finding user: %w", err)
 	}
 
 	return &interop.NotePurchaseAgreement{
@@ -111,5 +112,11 @@ func (g *NotePurchaseAgreementGateway) FindOne(ctx context.Context, payload inte
 		SocialSecurity: usr.SocialSecurity,
 		FundsCommitted: npa.FundsCommitted,
 		CreatedOn:      npa.CreatedOn.Format(time.RFC3339),
+		User: &interop.User{
+			Id:           usr.Id,
+			EmailAddress: usr.EmailAddress,
+			Password:     usr.Password,
+		},
 	}, npa.DocURL, nil
+
 }

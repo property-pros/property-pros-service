@@ -31,6 +31,7 @@ func (i *GrpcInterceptor) HandleRequest(ctx context.Context, req interface{}, in
 	testResult, err := i.testRequestHandler.Test(ctx, req, info, handler)
 
 	if err != nil {
+		// return handler(ctx, req)
 		fmt.Println("HandleRequest auth validating")
 		return i.authValidationRequestHandler.Validate(ctx, req, info, handler)
 	}
@@ -38,3 +39,4 @@ func (i *GrpcInterceptor) HandleRequest(ctx context.Context, req interface{}, in
 	fmt.Printf("HandleRequest returning test result; Test err: %v", err)
 	return testResult, err
 }
+
