@@ -47,7 +47,7 @@ func notePurchaseAgreementFixture(db *gorm.DB) {
   }
 
   // Save the test NPA
-  db.Create(&npa)
+  db.FirstOrCreate(&npa)
 }
 
 func userFixture(db *gorm.DB) {

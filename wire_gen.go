@@ -44,7 +44,7 @@ func Bootstrap() (*bootstrap.App, error) {
 	clientConnInterface := bootstrap.NewGrpcConnection(configConfig)
 	notePurchaseAgreementServiceClient := bootstrap.NewNotePurchaseAgreementClient(clientConnInterface)
 	statementServiceClient := statement.NewStatementServiceClient(clientConnInterface)
-	iDocUploader := awss3.NewClient()
+	iDocUploader := awss3.NewClient(configConfig)
 	iDocumentContentService := documents.NewDocumentContentService(notePurchaseAgreementServiceClient, statementServiceClient, iDocUploader)
 	iAgreementsService := agreements.NewNotePurchaseAgreementService(iNotePurchaseAgreementModelFactory, notePurchaseAgreementGateway, iUsersGateway, iDocumentContentService)
 	iUsersService := users.NewUsersService(iUsersGateway)
@@ -59,11 +59,17 @@ func Bootstrap() (*bootstrap.App, error) {
 		return nil, err
 	}
 	grpcInterceptor := interceptors.NewGrpcInterceptor(iUsersService, consumerDrivenContractTestingInterceptor, authValidationInterceptor)
-	app := bootstrap.NewApp(notePurchaseAgreementController, authController, statementController, configConfig, grpcInterceptor, authValidationInterceptor)
+	app := bootstrap.NewApp(notePurchaseAgreementController, authController, statementController, configConfig, grpcInterceptor, authValidationInterceptor, iAgreementsService, iDocumentContentService, iDocUploader)
 	return app, nil
 }
 
 // main.go:
+
+var UserSet wire.ProviderSet = wire.NewSet(data.NewUsersRepository, users.NewUserModel, NewUserModelFactory, users.NewUsersGateway, users.NewUsersService, controllers.NewAuthController)
+
+var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(data.NewGormDatabase, awss3.NewClient, data.NewAgreementsRepository, agreements.NewNotePurchaseAgreementModel, NewNotePurchaseAgreementModelFactory, agreements.NewNotePurchaseAgreementGateway, bootstrap.NewGrpcConnection, bootstrap.NewNotePurchaseAgreementClient, documents.NewDocumentContentService, agreements.NewNotePurchaseAgreementService, controllers.NewNotePurchaseAgreementController)
+
+var StatementSet wire.ProviderSet = wire.NewSet(data.NewStatementsRepository, common.NewLogger, interop.NewStatementServiceClient, controllers.NewStatementController)
 
 func main() {
 	app, err := Bootstrap()
@@ -78,12 +84,6 @@ func main() {
 		panic(fmt.Errorf("failed to run application: %w", err))
 	}
 }
-
-var UserSet wire.ProviderSet = wire.NewSet(data.NewUsersRepository, users.NewUserModel, NewUserModelFactory, users.NewUsersGateway, users.NewUsersService, controllers.NewAuthController)
-
-var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(data.NewGormDatabase, awss3.NewClient, data.NewAgreementsRepository, agreements.NewNotePurchaseAgreementModel, NewNotePurchaseAgreementModelFactory, agreements.NewNotePurchaseAgreementGateway, bootstrap.NewGrpcConnection, bootstrap.NewNotePurchaseAgreementClient, documents.NewDocumentContentService, agreements.NewNotePurchaseAgreementService, controllers.NewNotePurchaseAgreementController)
-
-var StatementSet wire.ProviderSet = wire.NewSet(data.NewStatementsRepository, common.NewLogger, interop.NewStatementServiceClient, controllers.NewStatementController)
 
 func provideAuthenticationInterceptor(authService interfaces.IUsersService) (*interceptors.AuthValidationInterceptor, error) {
 	return interceptors.NewAuthValidationInterceptor(authService, controllers.GRPC_AUTH_METHOD, controllers.GRPC_REGISTRATION_METHOD), nil
@@ -102,7 +102,7 @@ func NewNotePurchaseAgreementModelFactory() interfaces.INotePurchaseAgreementMod
 }
 
 func (factory *Factory) NewUserModel(context2 context.Context, user *interop.User) (interfaces.IUserModel, error) {
-	return &users.UserModel{}, nil
+	return nil, nil
 
 }
 

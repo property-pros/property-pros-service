@@ -1,4 +1,8 @@
+//go:build wireinject
+// +build wireinject
+
 //go:generate go run ./build/gen_accessors.go -v
+
 package main
 
 // generate getters and setters with https://github.com/masaushi/accessory
@@ -76,7 +80,6 @@ func Bootstrap() (*bootstrap.App, error) {
 		interceptors.NewController,
 		interceptors.NewGrpcInterceptor,
 		bootstrap.NewApp,
-		documents.InitFileFixtures,
 	)
 
 	return nil, nil
@@ -117,7 +120,7 @@ func NewNotePurchaseAgreementModelFactory() interfaces.INotePurchaseAgreementMod
 // }
 
 func (factory *Factory) NewUserModel(context ctx.Context, user *interop.User) (interfaces.IUserModel, error) {
-	return &users.UserModel{}, nil
+	return nil, nil
 	// fmt.Println("here in NewUserModel")
 	// userModel, err := UserModelInitializer()
 	// if err != nil {

@@ -49,13 +49,19 @@ func (g *NotePurchaseAgreementGateway) SaveUserAndNotePurchaseAgreement(ctx cont
 }
 
 func (g *NotePurchaseAgreementGateway) SaveNotePurchaseAgreement(ctx context.Context, agreement *interop.NotePurchaseAgreement, docURL string) (*interop.NotePurchaseAgreement, error) {
+	id := agreement.GetId()
+	
+	if id == "" {
+		id = uuid.New().String()
+	}
+
 	agreementModelData := data.NotePurchaseAgreement{
-		Id:             uuid.New().String(),
+		Id:             id,
 		FundsCommitted: agreement.FundsCommitted,
 		UserId:         agreement.User.Id,
 		DocURL:         docURL,
 	}
-
+	
 	agreementSaved, err := g.npaRepository.Save(&agreementModelData)
 	if err != nil {
 		return nil, err
@@ -63,6 +69,7 @@ func (g *NotePurchaseAgreementGateway) SaveNotePurchaseAgreement(ctx context.Con
 
 	agreement.Id = agreementSaved.Id
 	agreement.CreatedOn = agreementSaved.CreatedOn.Format(time.RFC3339)
+	// agreement.DocURL = agreementSaved.DocURL
 
 	return agreement, nil
 }

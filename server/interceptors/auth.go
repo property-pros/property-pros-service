@@ -28,9 +28,9 @@ func NewAuthValidationInterceptor(authService interfaces.IUsersService, authMeth
 }
 
 func (validator *AuthValidationInterceptor) Validate(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	fmt.Printf("full method: %v; registration method: %v; auth method: %v", info.FullMethod, validator.registrationMethod, validator.authMethod)
+	fmt.Printf("full method: %v;\n\n registration method: %v;\n\n auth method: %v\n\n", info.FullMethod, validator.registrationMethod, validator.authMethod)
 	if info.FullMethod != validator.registrationMethod && info.FullMethod != validator.authMethod {
-		log.Printf("authenticating: %v", info.FullMethod)
+		log.Printf("authenticating: %v\n\n", info.FullMethod)
 		md, ok := metadata.FromIncomingContext(ctx)
 
 		if !ok {
@@ -38,14 +38,13 @@ func (validator *AuthValidationInterceptor) Validate(ctx context.Context, req in
 		}
 
 		authMetadata := md.Get("authorization")
-
-		log.Printf("auth metadata: %+v", authMetadata[0])
 		
 		if len(authMetadata) == 0 {
 			return status.Error(codes.Unauthenticated, fmt.Sprintf("%v Failed;  No auth token", info.FullMethod)), nil
 		}
 
 		token := authMetadata[0]
+
 		userId := validator.authService.UserIdIfValidToken(ctx, token)
 		if userId != "" {
 			ctxWithUserId := context.WithValue(ctx, constants.UserIdKey, userId)

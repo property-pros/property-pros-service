@@ -30,7 +30,7 @@ func (c *StatementController) GetStatements(ctx context.Context, req *interop.Ge
 	c.logger.Info(fmt.Sprintf("Received GetStatements request: %v", req.String()))
 
 	userId, err := GetUserIdFromContext(ctx)
-	
+
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated")
 	}
@@ -38,27 +38,60 @@ func (c *StatementController) GetStatements(ctx context.Context, req *interop.Ge
 	query := &interop.Statement{UserId: userId}
 
 	results := c.statementsRepo.Query(query)
+//TODO: uncomment
+	// for _, statement := range results {
 
-	for _, statement := range results {
+	// 	doc, err := c.documentService.BuildStatement(ctx, statement)
 
-		doc, err := c.documentService.BuildStatement(ctx, statement)
+	// 	if err != nil {
+	// 		fmt.Printf("Error building statement doc: %v", err)
+	// 		return nil, err
+	// 	}
 
-		if err != nil {
-			fmt.Printf("Error building statement doc: %v", err)
-			return nil, err
-		}
-
-		statement.Document = doc.GetDocContent()
-	}
+	// 	statement.Document = doc.GetDocContent()
+	// }
 
 	response := &interop.GetStatementsResponse{
-		Payload: &interop.StatementsPayload{
-			Statements: results,
-		},
+		Payload: results,
 	}
 
 	c.logger.Info("Returning GetStatements response - StatementsCount: %v", len(results))
 
+	return response, nil
+}
+
+func (c *StatementController) GetStatementDoc(ctx context.Context, req *interop.GetStatementDocRequest) (*interop.GetStatementDocResponse, error) {
+	c.logger.Info(fmt.Sprintf("Received GetStatementDoc request: %v", req.String()))
+
+	userId, err := GetUserIdFromContext(ctx)
+
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated")
+	}
+
+	query := &interop.Statement{UserId: userId, Id: req.Payload.Id}
+
+	results := c.statementsRepo.Query(query)
+
+	if len(results) == 0 {
+		return nil, status.Errorf(codes.NotFound, "statement not found")
+	}
+
+	statement := results[0]
+
+	doc, err := c.documentService.BuildStatement(ctx, statement)
+
+	if err != nil {
+		fmt.Printf("Error building statement doc: %v", err)
+		return nil, err
+	}
+
+	response := &interop.GetStatementDocResponse{
+		Document: doc.GetDocContent(),
+	}
+
+	c.logger.Info("Returning GetStatementDoc response")
+	c.logger.Info(fmt.Sprintf("Returning GetStatementDoc response: %v", response.Document))
 	return response, nil
 }
 

@@ -23,6 +23,8 @@ func (service *NotePurchaseAgreementService) GetNotePurchaseAgreementDocContent(
 		return nil, err
 	}
 
+	fmt.Printf("docURL is %v\n", docURL)
+
 	content, err := service.documentContentService.GetDocumentContent(ctx, docURL)
 	fmt.Printf("content is %v\n", content)
 	fmt.Printf("content is %v\n", string(content))
@@ -40,7 +42,7 @@ func (service *NotePurchaseAgreementService) GetNotePurchaseAgreements(ctx conte
 
 func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement *interop.NotePurchaseAgreement) (*interop.NotePurchaseAgreement, error) {
 
-	log.Printf("Save service agreement param: %+#v \n\n", agreement)
+	log.Printf("Save service agreement param: %+v \n\n", agreement)
 	npaWithUser, err := service.usersGateway.SaveUser(ctx, agreement)
 
 	log.Printf("npaWithUser: %+#v \n\n", npaWithUser)
@@ -54,9 +56,14 @@ func (service *NotePurchaseAgreementService) Save(ctx context.Context, agreement
 	docURL, err := service.documentContentService.CreateAndSaveNotePurchaseAgreementDoc(ctx, agreement)
 
 	log.Printf("docURL: %+#v \n\n", docURL)
-	log.Printf("err: %+#v \n\n", err)
+
+	// content, err := service.documentContentService.GetDocumentContent(ctx, docURL)
+
+	// log.Printf("content: %+#v \n\n", string(content))
+	// log.Printf("err: %+#v \n\n", err)
 
 	if err != nil {
+		log.Printf("err: %+#v \n\n", err.Error())
 		return nil, fmt.Errorf("failed to generate doc content, err: %w", err)
 	}
 
