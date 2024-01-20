@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/vireocloud/property-pros-service/config"
@@ -24,15 +25,45 @@ func NewGormDatabase(config *config.Config ) (*gorm.DB, error) {
 	db.AutoMigrate(&User{})
 	db.AutoMigrate(&NotePurchaseAgreement{})
 	db.AutoMigrate(&Statement{})
-
-	statementFixture(db)
-
+	
+	userFixture(db)  // Create the user fixture
+	statementFixture(db)  // Create the statement fixture with the created user
+	notePurchaseAgreementFixture(db)
 	return db, nil
 }
+
+func notePurchaseAgreementFixture(db *gorm.DB) {
+
+  // Get the test user
+  var user User
+  db.Where("email_address = ?", "srt0422@yahoo.com").First(&user)
+
+  // Create a test note purchase agreement
+  npa := NotePurchaseAgreement{
+	Id: "test-npa-1", 
+	UserId: user.Id,
+	CreatedOn: time.Now(),
+	FundsCommitted: 0,
+  }
+
+  // Save the test NPA
+  db.FirstOrCreate(&npa)
+}
+
+func userFixture(db *gorm.DB) {
+	user := User{
+		Id:           os.Getenv("TEST_ACCOUNT_ID"),
+		EmailAddress: "srt0422@yahoo.com",
+		Password:     "password",  // Consider using a secure way to store passwords
+	}
+
+	db.FirstOrCreate(&user, User{Id: user.Id})
+}
+
 func statementFixture(db *gorm.DB) {
 
 	email := "srt0422@yahoo.com"
-	userID := "1234567890"
+	userID := os.Getenv("TEST_ACCOUNT_ID")
 
 	principle := 100000.0
 	rate := 0.04 / 12 // monthly interest rate

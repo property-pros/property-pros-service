@@ -35,17 +35,20 @@ func (service *UsersService) UserIdIfValidToken(ctx context.Context, token strin
 	authToken, err := base64.StdEncoding.DecodeString(strings.Replace(token, "Basic ", "", 1))
 
 	if err != nil {
+		fmt.Printf("auth err decodestring: %v\n", err)
 		return ""
 	}
 
 	err = proto.Unmarshal(authToken, payload)
 
 	if err != nil {
+		fmt.Printf("auth err unmarshal: %v\n", err)
 		return ""
 	}
 
 	usrID, err := service.AuthenticateUser(ctx, payload)
 	if err != nil || usrID == "" {
+		fmt.Printf("auth err authenticate: %v\n", err)
 		return ""
 	}
 
@@ -63,6 +66,7 @@ func (service *UsersService) GenerateBasicUserAuthToken(user *interop.User) stri
 }
 
 func NewUsersService(userGateway interfaces.IUsersGateway) interfaces.IUsersService {
+	fmt.Printf("NewUsersService - user gateway: %v\r\n", userGateway)
 	return &UsersService{userGateway: userGateway}
 }
 

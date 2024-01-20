@@ -23,21 +23,21 @@ type NotePurchaseAgreementController struct {
 }
 
 func notePurchaseAgreementToRecordResult(agreement *interop.NotePurchaseAgreement) *interop.RecordResultPayload {
+	// Return a RecordResultPayload from the NotePurchaseAgreement
 	return &interop.RecordResultPayload{
 		Id:        agreement.Id,
 		CreatedOn: agreement.CreatedOn,
 	}
 }
 
-func notePurchaseAgreementListToRecordCollection(result []*interop.NotePurchaseAgreement) *interop.RecordColection {
+func notePurchaseAgreementListToRecordCollection(result []*interop.NotePurchaseAgreement) []*interop.RecordResultPayload {
 	payload := []*interop.RecordResultPayload{}
 
 	for _, agreement := range result {
 		payload = append(payload, notePurchaseAgreementToRecordResult(agreement))
 	}
 
-	recordCollection := &interop.RecordColection{Payload: payload}
-	return recordCollection
+	return payload
 }
 
 func (c *NotePurchaseAgreementController) GetNotePurchaseAgreements(ctx context.Context, req *interop.GetNotePurchaseAgreementsRequest) (*interop.GetNotePurchaseAgreementsResponse, error) {
@@ -72,7 +72,7 @@ func (c *NotePurchaseAgreementController) GetNotePurchaseAgreement(ctx context.C
 	if err != nil {
 		return response, err
 	}
-
+	fmt.Printf("GetNotePurchaseAgreement result: %+v", result)
 	response.Payload = result
 
 	return response, nil
@@ -93,20 +93,20 @@ func (c *NotePurchaseAgreementController) SaveNotePurchaseAgreement(ctx context.
 
 	return response, nil
 }
+func (c *NotePurchaseAgreementController) GetNotePurchaseAgreementDoc(req *interop.GetNotePurchaseAgreementDocRequest, stream interop.NotePurchaseAgreementService_GetNotePurchaseAgreementDocServer) error {
 
-func (c *NotePurchaseAgreementController) GetNotePurchaseAgreementDoc(ctx context.Context, req *interop.GetNotePurchaseAgreementDocRequest) (response *interop.GetNotePurchaseAgreementDocResponse, errResult error) {
-
-	response = &interop.GetNotePurchaseAgreementDocResponse{}
-
-	doc, returnErr := c.notePurchaseAgreementService.GetNotePurchaseAgreementDocContent(ctx, req.GetPayload())
-
-	if returnErr != nil {
-		return response, returnErr
+	doc, err := c.notePurchaseAgreementService.GetNotePurchaseAgreementDocContent(stream.Context(), req.GetPayload())
+	if err != nil {
+		return err
+	}
+	
+	if err := stream.Send(&interop.GetNotePurchaseAgreementDocResponse{
+		FileContent: doc,
+	}); err != nil {
+		return err
 	}
 
-	response.FileContent = doc
-
-	return response, returnErr
+	return nil
 }
 
 func NewNotePurchaseAgreementController(notePurchaseAgreementService interfaces.IAgreementsService, authService interfaces.IUsersService) *NotePurchaseAgreementController {

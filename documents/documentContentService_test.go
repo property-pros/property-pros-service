@@ -61,7 +61,7 @@ func Setup() {
 	mockClient = &ClientMock{}
 	mockDocUploader = &DocUploaderMock{}
 
-	testDocumentContentManager = NewDocumentContentService(mockClient, mockDocUploader)
+	testDocumentContentManager = NewDocumentContentService(mockClient, nil, mockDocUploader)
 }
 
 func Teardown() {

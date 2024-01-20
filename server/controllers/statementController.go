@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/vireocloud/property-pros-service/common"
 	"github.com/vireocloud/property-pros-service/interfaces"
@@ -13,100 +14,85 @@ import (
 type StatementController struct {
 	interop.UnimplementedStatementServiceServer
 
-	authService      interfaces.IUsersService
-	statementService interfaces.IAgreementsService
-	statementsRepo   interfaces.IStatementsRepository
-	logger           *common.Logger
+	statementsRepo  interfaces.IStatementsRepository
+	logger          *common.Logger
+	documentService interfaces.IDocumentContentService
 }
 
-func statementToRecordResult(statement *interop.Statement) *interop.RecordResultPayload {
-	return &interop.RecordResultPayload{
-		Id: statement.Id,
-		// CreatedOn: statement.CreatedOn,
+func NewStatementController(statementRepo interfaces.IStatementsRepository, documentService interfaces.IDocumentContentService) *StatementController {
+	return &StatementController{
+		statementsRepo:  statementRepo,
+		documentService: documentService,
 	}
-}
-
-func statementListToRecordCollection(result []interfaces.IAgreementModel) *interop.RecordColection {
-	payload := []*interop.RecordResultPayload{}
-	recordCollection := &interop.RecordColection{Payload: payload}
-
-	// for _, agreement := range result {
-	// payload = append(payload, statementToRecordResult(agreement.GetPayload()))
-	// }
-
-	return recordCollection
 }
 
 func (c *StatementController) GetStatements(ctx context.Context, req *interop.GetStatementsRequest) (*interop.GetStatementsResponse, error) {
-	c.logger.Info("Received GetStatements request")
+	c.logger.Info(fmt.Sprintf("Received GetStatements request: %v", req.String()))
 
-	if req.UserId == "" {
-		return nil, status.Error(codes.InvalidArgument, "UserId is required")
+	userId, err := GetUserIdFromContext(ctx)
+
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated")
 	}
 
-	response := &interop.GetStatementsResponse{}
-
-	query := &interop.Statement{UserId: req.GetUserId()}
+	query := &interop.Statement{UserId: userId}
 
 	results := c.statementsRepo.Query(query)
+//TODO: uncomment
+	// for _, statement := range results {
 
-	response.Payload.Statements = results
+	// 	doc, err := c.documentService.BuildStatement(ctx, statement)
+
+	// 	if err != nil {
+	// 		fmt.Printf("Error building statement doc: %v", err)
+	// 		return nil, err
+	// 	}
+
+	// 	statement.Document = doc.GetDocContent()
+	// }
+
+	response := &interop.GetStatementsResponse{
+		Payload: results,
+	}
 
 	c.logger.Info("Returning GetStatements response - StatementsCount: %v", len(results))
 
 	return response, nil
 }
 
+func (c *StatementController) GetStatementDoc(ctx context.Context, req *interop.GetStatementDocRequest) (*interop.GetStatementDocResponse, error) {
+	c.logger.Info(fmt.Sprintf("Received GetStatementDoc request: %v", req.String()))
 
-// func (c *StatementController) GetStatement(ctx context.Context, req *interop.GetStatementRequest) (*interop.GetStatementResponse, error) {
+	userId, err := GetUserIdFromContext(ctx)
 
-// 	response := &interop.GetStatementResponse{}
-
-// 	result, err := c.statementService.GetStatement(ctx, req.GetPayload())
-
-// 	if err != nil {
-// 		return response, err
-// 	}
-
-// 	response.Payload = result
-
-// 	return response, nil
-// }
-
-// func (c *StatementController) SaveStatement(ctx context.Context, req *interop.SaveStatementRequest) (response *interop.SaveStatementResponse, errResult error) {
-
-// 	response = &interop.SaveStatementResponse{}
-
-// 	result, err := c.statementService.Save(ctx, req.Payload)
-
-// 	if err != nil {
-// 		return response, err
-// 	}
-
-// 	response.Payload = statementToRecordResult(result)
-
-// 	return response, nil
-// }
-
-// func (c *StatementController) GetStatementDoc(ctx context.Context, req *interop.GetStatementDocRequest) (response *interop.GetStatementDocResponse, errResult error) {
-
-// 	response = &interop.GetStatementDocResponse{}
-
-// 	doc, returnErr := c.statementService.GetStatementDocContent(ctx, req.GetPayload())
-
-// 	if returnErr != nil {
-// 		return response, returnErr
-// 	}
-
-// 	response.FileContent = doc
-
-// 	return response, returnErr
-// }
-
-func NewStatementController(statementRepo interfaces.IStatementsRepository) *StatementController {
-	return &StatementController{
-		statementsRepo: statementRepo,
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated")
 	}
+
+	query := &interop.Statement{UserId: userId, Id: req.Payload.Id}
+
+	results := c.statementsRepo.Query(query)
+
+	if len(results) == 0 {
+		return nil, status.Errorf(codes.NotFound, "statement not found")
+	}
+
+	statement := results[0]
+
+	doc, err := c.documentService.BuildStatement(ctx, statement)
+
+	if err != nil {
+		fmt.Printf("Error building statement doc: %v", err)
+		return nil, err
+	}
+
+	response := &interop.GetStatementDocResponse{
+		Document: doc.GetDocContent(),
+	}
+
+	c.logger.Info("Returning GetStatementDoc response")
+	c.logger.Info(fmt.Sprintf("Returning GetStatementDoc response: %v", response.Document))
+	return response, nil
 }
 
 var _ interop.StatementServiceServer = (*StatementController)(nil)

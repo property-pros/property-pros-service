@@ -92,11 +92,8 @@ func (c *PropertyProsApiController) SaveNotePurchaseAgreement(ctx context.Contex
 	}, nil
 }
 
-func (c *PropertyProsApiController) GetNotePurchaseAgreementDoc(ctx context.Context, req *interop.GetNotePurchaseAgreementDocRequest) (response *interop.GetNotePurchaseAgreementDocResponse, errResult error) {
-	return &interop.GetNotePurchaseAgreementDocResponse{
-			FileContent: []byte("test file content"),
-		},
-		nil
+func (c *PropertyProsApiController) GetNotePurchaseAgreementDoc(*interop.GetNotePurchaseAgreementDocRequest, interop.NotePurchaseAgreementService_GetNotePurchaseAgreementDocServer) error {
+	return nil
 }
 
 func (c *PropertyProsApiController) GetNotePurchaseAgreement(ctx context.Context, req *interop.GetNotePurchaseAgreementRequest) (response *interop.GetNotePurchaseAgreementResponse, errResult error) {
@@ -111,12 +108,11 @@ func (c *PropertyProsApiController) GetNotePurchaseAgreement(ctx context.Context
 
 func (c *PropertyProsApiController) GetNotePurchaseAgreements(ctx context.Context, req *interop.GetNotePurchaseAgreementsRequest) (response *interop.GetNotePurchaseAgreementsResponse, errResult error) {
 	return &interop.GetNotePurchaseAgreementsResponse{
-			Payload: &interop.RecordColection{
-				Payload: []*interop.RecordResultPayload{
-					{Id: uuid.New().String()},
-				},
+			Payload: []*interop.RecordResultPayload{
+				{Id: uuid.New().String()},
 			},
 		},
+
 		nil
 }
 

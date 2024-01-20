@@ -1,3 +1,6 @@
+//go:build wireinject
+// +build wireinject
+
 //go:generate go run ./build/gen_accessors.go -v
 
 package main
@@ -21,20 +24,6 @@ import (
 	"github.com/vireocloud/property-pros-service/server/interceptors"
 	"github.com/vireocloud/property-pros-service/users"
 )
-
-func main() {
-	app, err := Bootstrap()
-	fmt.Println("app bootstrap: ", app)
-	if err != nil {
-		panic(fmt.Errorf("failed to boostrap application: %w", err))
-	}
-
-	err = app.Run()
-
-	if err != nil {
-		panic(fmt.Errorf("failed to run application: %w", err))
-	}
-}
 
 var UserSet wire.ProviderSet = wire.NewSet(
 	data.NewUsersRepository,
@@ -61,16 +50,31 @@ var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(
 var StatementSet wire.ProviderSet = wire.NewSet(
 	data.NewStatementsRepository,
 	common.NewLogger,
+	interop.NewStatementServiceClient,
 	controllers.NewStatementController)
+
+func main() {
+	app, err := Bootstrap()
+	fmt.Println("app bootstrap: ", app)
+	if err != nil {
+		panic(fmt.Errorf("failed to boostrap application: %w", err))
+	}
+
+	err = app.Run()
+
+	if err != nil {
+		panic(fmt.Errorf("failed to run application: %w", err))
+	}
+}
 
 func Bootstrap() (*bootstrap.App, error) {
 
 	wire.Build(
 		config.NewConfig,
 		UserSet,
-		NotePuchaseAgreementSet, 
+		NotePuchaseAgreementSet,
 		StatementSet,
-		
+
 		provideAuthenticationInterceptor,
 		interceptors.NewConsumerDrivenContractTestingInterceptor,
 		interceptors.NewController,
@@ -116,7 +120,7 @@ func NewNotePurchaseAgreementModelFactory() interfaces.INotePurchaseAgreementMod
 // }
 
 func (factory *Factory) NewUserModel(context ctx.Context, user *interop.User) (interfaces.IUserModel, error) {
-	return &users.UserModel{}, nil
+	return nil, nil
 	// fmt.Println("here in NewUserModel")
 	// userModel, err := UserModelInitializer()
 	// if err != nil {

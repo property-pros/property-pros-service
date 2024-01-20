@@ -1,59 +1,97 @@
-//go:build integration
-// +build integration
-
-package controllers_test
+package controllers
 
 import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	statement "github.com/vireocloud/property-pros-sdk/api/statement/v1"
-	"google.golang.org/grpc"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
+	"github.com/vireocloud/property-pros-service/interfaces"
+	"github.com/vireocloud/property-pros-service/interop"
 )
 
-func TestGetStatements(t *testing.T) {
-	// Create a connection to the gRPC server
-	conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
-	require.NoError(t, err)
-
-	// Create a client from the connection
-	client := statement.NewStatementServiceClient(conn)
-
-	// Create the request
-	req := &statement.GetStatementsRequest{
-		UserId: "user1",
-	}
-
-	// Call the RPC and get the response
-	response, err := client.GetStatements(context.Background(), req)
-	require.NoError(t, err)
-
-	// Assert on the response
-	assert.Equal(t, 2, len(response.GetPayload().GetStatements()))
-	assert.Equal(t, "statement1", response.GetPayload().Statements[0].GetId())
+type StatementControllerTestSuite struct {
+	suite.Suite
+	controller        *StatementController
+	testStatementRepo *MockStatementRepo
 }
 
-func TestGetStatementDoc(t *testing.T) {
-	// Create a connection to the gRPC server
-	conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
-	require.NoError(t, err)
-
-	// Create a client from the connection
-	client := statement.NewStatementServiceClient(conn)
-
-	// Create the request
-	req := &statement.GetStatementDocRequest{
-		Payload: &statement.Statement{
-			Id: "statement1",
+func (suite *StatementControllerTestSuite) SetupTest() {
+	suite.testStatementRepo = &MockStatementRepo{}
+	suite.controller = NewStatementController(suite.testStatementRepo)
+}
+func (suite *StatementControllerTestSuite) TestGetStatements() {
+	ctx := context.TODO()
+	userId := "someUserId"
+	expectedStatements := []*interop.Statement{
+		{
+			Id: "statementId1",
+		},
+		{
+			Id: "statementId2",
 		},
 	}
 
-	// Call the RPC and get the response
-	response, err := client.GetStatementDoc(context.Background(), req)
-	require.NoError(t, err)
+	suite.testStatementRepo.On("Query", mock.IsType(&interop.Statement{
+		UserId: userId,
+	})).Return(expectedStatements)
 
-	// Assert on the response
-	assert.Equal(t, "statement1.pdf", response.GetDocument())
+	result, err := suite.controller.GetStatements(ctx, &interop.GetStatementsRequest{
+		UserId: userId,
+	})
+
+	suite.Nil(err)
+	suite.Equal(expectedStatements, result.Payload.Statements)
+	suite.testStatementRepo.AssertExpectations(suite.T())
 }
+
+func TestStatementController(t *testing.T) {
+	suite.Run(t, new(StatementControllerTestSuite))
+}
+
+
+type MockStatementRepo struct {
+	mock.Mock
+}
+
+func (m *MockStatementRepo) GetStatementsByUser(ctx context.Context, userId string) ([]*interop.Statement, error) {
+	args := m.Called(ctx, userId)
+	return args.Get(0).([]*interop.Statement), args.Error(1)
+}
+
+func (m *MockStatementRepo) GetStatement(ctx context.Context, statement *interop.Statement) (*interop.Statement, error) {
+	args := m.Called(ctx, statement)
+	return args.Get(0).(*interop.Statement), args.Error(1)
+}
+
+func (m *MockStatementRepo) Save(statement *interop.Statement) (*interop.Statement, error) {
+	args := m.Called(statement)
+	return args.Get(0).(*interop.Statement), nil
+}
+
+func (m *MockStatementRepo) Delete(statement *interop.Statement) (*interop.Statement, error) {
+	args := m.Called(statement)
+	return args.Get(0).(*interop.Statement), args.Error(0)
+}
+
+func (m *MockStatementRepo) GetStatementDocContent(ctx context.Context, statement *interop.Statement) ([]byte, error) {
+	args := m.Called(ctx, statement)
+	return args.Get(0).([]byte), args.Error(1)
+}
+
+func (m *MockStatementRepo) FindOne(statement *interop.Statement) (*interop.Statement, error) {
+	args := m.Called(statement)
+	return args.Get(0).(*interop.Statement), args.Error(1)
+}
+
+func (m *MockStatementRepo) Query(statement *interop.Statement) []*interop.Statement {
+	args := m.Called(statement)
+	return args.Get(0).([]*interop.Statement)
+}
+
+func (m *MockStatementRepo) Get(id uint) {
+	m.Called(id)
+	return
+}
+
+var _ interfaces.IStatementsRepository = (*MockStatementRepo)(nil)

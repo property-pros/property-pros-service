@@ -3,12 +3,13 @@ package interop
 import (
 	propertyProsAuthApi "github.com/vireocloud/property-pros-sdk/api/auth/v1"
 	apiCommon "github.com/vireocloud/property-pros-sdk/api/common/v1"
+	propertyProsFinanceApi "github.com/vireocloud/property-pros-sdk/api/finance/v1"
 	propertyProsAgreementApi "github.com/vireocloud/property-pros-sdk/api/note_purchase_agreement/v1"
 	propertyProsStatementApi "github.com/vireocloud/property-pros-sdk/api/statement/v1"
 	"google.golang.org/grpc"
 )
 
-//note purchase agreements
+// note purchase agreements
 type UnsafeNotePurchaseAgreementServiceServer = propertyProsAgreementApi.UnsafeNotePurchaseAgreementServiceServer
 type UnimplementedNotePurchaseAgreementServiceServer = propertyProsAgreementApi.UnimplementedNotePurchaseAgreementServiceServer
 type NotePurchaseAgreementServiceServer = propertyProsAgreementApi.NotePurchaseAgreementServiceServer
@@ -39,6 +40,8 @@ var RegisterNotePurchaseAgreementServiceHandlerFromEndpoint = propertyProsAgreem
 var RegisterNotePurchaseAgreementServiceServer = propertyProsAgreementApi.RegisterNotePurchaseAgreementServiceServer
 var RegisterNotePurchaseAgreementServiceHandler = propertyProsAgreementApi.RegisterNotePurchaseAgreementServiceHandler
 
+type NotePurchaseAgreementService_GetNotePurchaseAgreementDocServer = propertyProsAgreementApi.NotePurchaseAgreementService_GetNotePurchaseAgreementDocServer
+type NotePurchaseAgreementService_GetNotePurchaseAgreementDocClient = propertyProsAgreementApi.NotePurchaseAgreementService_GetNotePurchaseAgreementDocClient
 // auth
 type AuthenticationServiceServer = propertyProsAuthApi.AuthenticationServiceServer
 type UnsafeAuthenticationServiceServer = propertyProsAuthApi.UnsafeAuthenticationServiceServer
@@ -62,9 +65,11 @@ type UnsafeStatementServiceServer = propertyProsStatementApi.UnsafeStatementServ
 type UnimplementedStatementServiceServer = propertyProsStatementApi.UnimplementedStatementServiceServer
 
 type Statement = propertyProsStatementApi.Statement
+
 type GetStatementsRequest = propertyProsStatementApi.GetStatementsRequest
 type GetStatementsResponse = propertyProsStatementApi.GetStatementsResponse
-type StatementsPayload = propertyProsStatementApi.StatementsPayload
+type GetStatementDocRequest = propertyProsStatementApi.GetStatementDocRequest
+type GetStatementDocResponse = propertyProsStatementApi.GetStatementDocResponse
 
 type StatementServiceClient = propertyProsStatementApi.StatementServiceClient
 
@@ -74,3 +79,24 @@ var RegisterStatementServiceHandlerFromEndpoint = propertyProsStatementApi.Regis
 var RegisterStatementServiceServer = propertyProsStatementApi.RegisterStatementServiceServer
 
 type CallOption = grpc.CallOption
+
+// finance
+type FinanceServiceServer = propertyProsFinanceApi.FinanceServiceServer
+type UnsafeFinanceServiceServer = propertyProsFinanceApi.UnsafeFinanceServiceServer
+type UnimplementedFinanceServiceServer = propertyProsFinanceApi.UnimplementedFinanceServiceServer
+
+type FinancialData = propertyProsFinanceApi.FinancialData
+type Account = propertyProsFinanceApi.Account
+type Balance = propertyProsFinanceApi.Balance
+type Transaction = propertyProsFinanceApi.Transaction
+type Location = propertyProsFinanceApi.Location
+type PaymentMeta = propertyProsFinanceApi.PaymentMeta
+
+type SaveFinancialItemRequest = propertyProsFinanceApi.SaveFinancialItemRequest
+type SaveFinancialItemResponse = propertyProsFinanceApi.SaveFinancialItemResponse
+
+// type GetFinancialItemRequest = propertyProsFinanceApi.GetFinancialItemRequest
+// type GetFinancialItemResponse = propertyProsFinanceApi.GetFinancialItemResponse
+
+type GetFinancialItemsRequest = propertyProsFinanceApi.GetFinancialItemsRequest
+type GetFinancialItemsResponse = propertyProsFinanceApi.GetFinancialItemsResponse

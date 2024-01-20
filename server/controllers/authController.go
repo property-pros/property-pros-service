@@ -23,7 +23,6 @@ type AuthController struct {
 }
 
 func (c *AuthController) AuthenticateUser(ctx context.Context, req *interop.AuthenticateUserRequest) (*interop.AuthenticateUserResponse, error) {
-fmt.Println("top of AuthenticateUser");
 	response := &interop.AuthenticateUserResponse{}
 
 	usrID, err := c.authService.AuthenticateUser(ctx, req.Payload)
@@ -40,11 +39,13 @@ fmt.Println("top of AuthenticateUser");
 	if !ok {
 		return nil, errors.New("could not grab metadata from context")
 	}
-	fmt.Printf("meta: %v", c.authService.GenerateBasicUserAuthToken(req.Payload))
+	// fmt.Printf("meta: %v", c.authService.GenerateBasicUserAuthToken(req.Payload))
 	// Set authorization  metadata for the client to send in subsequent requests
 	meta.Set("authorization", c.authService.GenerateBasicUserAuthToken(req.Payload))
 	// Metadata is sent on its own, so we need to send the header. There is also something called Trailer
 	grpc.SendHeader(ctx, meta)
+
+	fmt.Println("bottom of AuthenticateUser; sent header")
 
 	return response, nil
 }
