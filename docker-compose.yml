@@ -6,6 +6,7 @@ services:
       - .:/app
     ports:
       - 8000:8000
+      - 8083:8083
   db:
     image: postgres:14.1-alpine
     restart: always
@@ -16,7 +17,7 @@ services:
     ports:
       - '5432:5432'
     volumes: 
-      - db:/var/lib/postgresql/data
+      - ./db:/var/lib/postgresql/data
   s3mock:
     image: adobe/s3mock
     restart: always
@@ -24,13 +25,12 @@ services:
       - '9090:9090'    
       - '9191:9191'
     environment:
-      - initialBuckets=documents    
+      - initialBuckets=property-pros    
       - debug=true  
       - root=/data
       - trace=true
       - JAVA_TOOL_OPTIONS=-Dcom.amazonaws.sdk.disableCbor=true
 
-    command: ["--hostname=my-bucket-name.localhost"]
     volumes:
       - ./s3mock_data:/data    
 volumes:

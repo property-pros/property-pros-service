@@ -3,7 +3,9 @@ package interceptors
 import (
 	"context"
 	"fmt"
+	"log"
 
+	"github.com/vireocloud/property-pros-service/constants"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -26,18 +28,27 @@ func NewAuthValidationInterceptor(authService interfaces.IUsersService, authMeth
 }
 
 func (validator *AuthValidationInterceptor) Validate(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	fmt.Printf("full method: %v; registration method: %v; auth method: %v", info.FullMethod, validator.registrationMethod, validator.authMethod)
+	fmt.Printf("full method: %v;\n\n registration method: %v;\n\n auth method: %v\n\n", info.FullMethod, validator.registrationMethod, validator.authMethod)
 	if info.FullMethod != validator.registrationMethod && info.FullMethod != validator.authMethod {
+		log.Printf("authenticating: %v\n\n", info.FullMethod)
 		md, ok := metadata.FromIncomingContext(ctx)
 
 		if !ok {
 			return nil, status.Error(codes.Unauthenticated, fmt.Sprintf("%v Failed;  Could not read metadata from context", info.FullMethod))
 		}
 
-		token := md.Get("authorization")[0]
+		authMetadata := md.Get("authorization")
+		
+		if len(authMetadata) == 0 {
+			return status.Error(codes.Unauthenticated, fmt.Sprintf("%v Failed;  No auth token", info.FullMethod)), nil
+		}
 
-		if validator.authService.IsValidToken(ctx, token) {
-			return handler(ctx, req)
+		token := authMetadata[0]
+
+		userId := validator.authService.UserIdIfValidToken(ctx, token)
+		if userId != "" {
+			ctxWithUserId := context.WithValue(ctx, constants.UserIdKey, userId)
+			return handler(ctxWithUserId, req)
 		}
 
 		return nil, status.Error(codes.Unauthenticated, fmt.Sprintf("%v Failed;  Invalid auth token", info.FullMethod))

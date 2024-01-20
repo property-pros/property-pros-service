@@ -1,0 +1,40 @@
+name: Go Build and Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: go get -v -t -d ./...
+
+      - name: Build
+        run: go build -v .
+
+      - name: Test
+        run: go test -v ./...
+
+      - name: Login to Canister Registry
+        run: |
+          echo "${{ secrets.CANISTER_PASSWORD }}" | docker login cloud.canister.io --username ${{ secrets.CANISTER_USERNAME }} --password-stdin
+
+      - name: Build Docker image
+        run: docker build -t cloud.canister.io/${{ env.CANISTER_USERNAME }}/app-name:${{ env.APP_NAME }} .
+
+      - name: Push Docker image to Canister Registry
+        run: docker push cloud.canister.io/${{ env.CANISTER_USERNAME }}/${{ env.APP_NAME }}

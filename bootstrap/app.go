@@ -17,16 +17,19 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/grpclog"
 	"gorm.io/gorm"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 
+	// grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/vireocloud/property-pros-service/config"
+	"github.com/vireocloud/property-pros-service/documents"
+	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
 	controllers "github.com/vireocloud/property-pros-service/server/controllers"
-	"github.com/vireocloud/property-pros-service/server/gateway"
 	"github.com/vireocloud/property-pros-service/server/interceptors"
 	"github.com/vireocloud/property-pros-service/server/third_party"
 	"google.golang.org/grpc/credentials/insecure"
@@ -41,15 +44,23 @@ type App struct {
 	Config                          *config.Config
 	AuthController                  *controllers.AuthController
 	NotePurchaseAgreementController *controllers.NotePurchaseAgreementController
-	apiInterceptor                  *interceptors.AuthValidationInterceptor
-	grpcInterceptor                 *interceptors.GrpcInterceptor
+	StatementController             *controllers.StatementController
+
+	apiInterceptor  *interceptors.AuthValidationInterceptor
+	grpcInterceptor *interceptors.GrpcInterceptor
 }
 
-func NewApp(notePurchaseAgreementController *controllers.NotePurchaseAgreementController, authController *controllers.AuthController, configuration *config.Config, grpcInterceptor *interceptors.GrpcInterceptor, authInterceptor *interceptors.AuthValidationInterceptor) *App {
+func NewApp(notePurchaseAgreementController *controllers.NotePurchaseAgreementController, authController *controllers.AuthController, statementController *controllers.StatementController, configuration *config.Config, grpcInterceptor *interceptors.GrpcInterceptor, authInterceptor *interceptors.AuthValidationInterceptor, notePurchaseAgreementsService interfaces.IAgreementsService, documentContentService interfaces.IDocumentContentService, s3Client interfaces.IDocUploader) *App {
+
+	os.Unsetenv("HTTP_PROXY")
+	os.Unsetenv("HTTPS_PROXY")
+	os.Unsetenv("NO_PROXY")
+	documents.InitFileFixtures(notePurchaseAgreementsService)
 
 	return &App{
 		AuthController:                  authController,
 		NotePurchaseAgreementController: notePurchaseAgreementController,
+		StatementController:             statementController,
 		Config:                          configuration,
 		grpcInterceptor:                 grpcInterceptor,
 		apiInterceptor:                  authInterceptor,
@@ -63,54 +74,11 @@ func (a *App) Run() error {
 	log := grpclog.NewLoggerV2(os.Stdout, io.Discard, io.Discard)
 	grpclog.SetLoggerV2(log)
 
-	if *enableTls {
-		port := "9090"
-
-		if *enableTls {
-			port = "10000"
-		}
-
-		addr := fmt.Sprintf(":%v", port)
-
-		grpcServer := grpc.NewServer(
-			grpc.UnaryInterceptor(a.grpcInterceptor.HandleRequest),
-			grpc.UnaryInterceptor(a.apiInterceptor.Validate),
-		)
-
-		wrappedServer := grpcweb.WrapServer(grpcServer)
-
-		handler := func(resp http.ResponseWriter, req *http.Request) {
-			wrappedServer.ServeHTTP(resp, req)
-		}
-
-		httpServer := http.Server{
-			Addr:    addr,
-			Handler: http.HandlerFunc(handler),
-		}
-
-		err := a.LogAvailableGrpcMethods(grpcServer)
-
-		if err != nil {
-			return err
-		}
-
-		go func() {
-			grpclog.Info("Serving gRPC on https://", addr)
-			if err := httpServer.ListenAndServeTLS("insecure/cert", "insecure/key"); err != nil {
-				grpclog.Fatalf("failed starting http2 server: %v", err)
-			}
-		}()
-
-		err = gateway.Run("dns:///"+addr, enableTls)
-
-		if err != nil {
-			log.Fatalln(err)
-			return err
-		}
-
-		// a.registerControllers(grpcServer)
+	if a.Config.EnableTLS {
+		creds := credentials.NewServerTLSFromCert(nil)
+		a.StartServer(creds)
 	} else {
-		return a.StartInsecureServer()
+		return a.StartServer(insecure.NewCredentials())
 	}
 
 	return nil
@@ -130,6 +98,7 @@ func (*App) LogAvailableGrpcMethods(grpcServer *grpc.Server) error {
 func (a *App) registerControllers(grpcServer *grpc.Server, ctx context.Context, gwmux *runtime.ServeMux, dialUrl string, dopts []grpc.DialOption) error {
 	interop.RegisterNotePurchaseAgreementServiceServer(grpcServer, a.NotePurchaseAgreementController)
 	interop.RegisterAuthenticationServiceServer(grpcServer, a.AuthController)
+	interop.RegisterStatementServiceServer(grpcServer, a.StatementController)
 
 	err := interop.RegisterNotePurchaseAgreementServiceHandlerFromEndpoint(ctx, gwmux, dialUrl, dopts)
 
@@ -140,6 +109,12 @@ func (a *App) registerControllers(grpcServer *grpc.Server, ctx context.Context, 
 
 	err = interop.RegisterAuthenticationServiceHandlerFromEndpoint(ctx, gwmux, dialUrl, dopts)
 
+	if err != nil {
+		grpclog.Fatalf("failed starting http server: %v", err)
+		return err
+	}
+
+	err = interop.RegisterStatementServiceHandlerFromEndpoint(ctx, gwmux, dialUrl, dopts)
 	if err != nil {
 		grpclog.Fatalf("failed starting http server: %v", err)
 		return err
@@ -177,10 +152,12 @@ func grpcHandlerFunc(grpcServer *grpc.Server, grpcWebServer *grpcweb.WrappedGrpc
 	}), &http2.Server{})
 }
 
-func (a *App) StartInsecureServer() error {
+func (a *App) StartServer(creds credentials.TransportCredentials) error {
 	wg := sync.WaitGroup{}
 
-	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(a.grpcInterceptor.HandleRequest))
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(a.grpcInterceptor.HandleRequest),
+	)
 
 	wrappedServer := grpcweb.WrapServer(grpcServer)
 
@@ -191,10 +168,10 @@ func (a *App) StartInsecureServer() error {
 	ctx, cancel := context.WithCancel(parentContext)
 
 	dopts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithTransportCredentials(creds),
 	}
 
-	port := a.Config.ListenPort
+	port := a.Config.GatewayPort
 	scheme := "dns:///"
 
 	serverUrl := fmt.Sprintf("%v:%v", a.Config.ListenAddress, port)
@@ -251,17 +228,56 @@ func getOpenAPIHandler() http.Handler {
 }
 
 func NewGrpcConnection(config *config.Config) grpc.ClientConnInterface {
-	connection, err := grpc.Dial(config.DocumentContentProviderSource, grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	var transportCredentials credentials.TransportCredentials = credentials.NewClientTLSFromCert(nil, "")
+
+	address := config.DocumentContentProviderSource
+	fmt.Printf("Attempting to connect to gRPC server at: %s\n", address)
+
+	// connection, err := grpc.Dial(fmt.Sprintf("%v", config.DocumentContentProviderSource), grpc.WithTransportCredentials(transportCredentials))
+	connection, err := grpc.Dial(
+		address,
+		grpc.WithTransportCredentials(transportCredentials),
+		// grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor()),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1024*1024), grpc.MaxCallSendMsgSize(1024*1*1)),
+	)
 
 	if err != nil {
 		panic(fmt.Errorf("NewGrpcConnection failed: %w", err))
 	}
 
+	fmt.Printf("Max call send size: %v\r\n", 1024*1*1)
 	return connection
 }
 
 func NewNotePurchaseAgreementClient(conn grpc.ClientConnInterface) interop.NotePurchaseAgreementServiceClient {
-
 	return interop.NewNotePurchaseAgreementServiceClient(conn)
-
 }
+
+// func NewGrpcConnectionOld(config *config.Config) grpc.ClientConnInterface {
+
+// 	var transportCredentials credentials.TransportCredentials = insecure.NewCredentials()
+
+// 	// if config.EnableTLS {
+// 	// 	secureTransportCredentials, err := credentials.NewClientTLSFromFile("/etc/ssl/cert.pem", "")
+
+// 	// 	if err != nil {
+// 	// 		panic(fmt.Errorf("NewGrpcConnection failed to create NewClientTLSFromFile: %w", err))
+// 	// 	}
+
+// 	// 	transportCredentials = secureTransportCredentials
+
+// 	// } else {
+// 		// transportCredentials = insecure.NewCredentials()
+// 	// }
+
+// 	_ = grpc_retry.UnaryClientInterceptor()
+// 	// connection, err := grpc.Dial(fmt.Sprintf("%v", config.DocumentContentProviderSource), grpc.WithTransportCredentials(transportCredentials))
+// 	connection, err := grpc.Dial(config.DocumentContentProviderSource, grpc.WithTransportCredentials(transportCredentials), grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor()))
+
+// 	if err != nil {
+// 		panic(fmt.Errorf("NewGrpcConnection failed: %w", err))
+// 	}
+
+// 	return connection
+// }

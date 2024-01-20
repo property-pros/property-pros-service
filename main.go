@@ -1,3 +1,6 @@
+//go:build wireinject
+// +build wireinject
+
 //go:generate go run ./build/gen_accessors.go -v
 
 package main
@@ -11,6 +14,7 @@ import (
 	"github.com/vireocloud/property-pros-service/agreements"
 	awss3 "github.com/vireocloud/property-pros-service/aws-s3"
 	"github.com/vireocloud/property-pros-service/bootstrap"
+	"github.com/vireocloud/property-pros-service/common"
 	"github.com/vireocloud/property-pros-service/config"
 	"github.com/vireocloud/property-pros-service/data"
 	"github.com/vireocloud/property-pros-service/documents"
@@ -20,21 +24,6 @@ import (
 	"github.com/vireocloud/property-pros-service/server/interceptors"
 	"github.com/vireocloud/property-pros-service/users"
 )
-
-func main() {
-	app, err := Bootstrap()
-	fmt.Println("app bootstrap: ", app)
-	if err != nil {
-		panic(fmt.Errorf("failed to boostrap application: %w", err))
-	}
-
-	err = app.Run()
-
-	if err != nil {
-		panic(fmt.Errorf("failed to run application: %w", err))
-	}
-
-}
 
 var UserSet wire.ProviderSet = wire.NewSet(
 	data.NewUsersRepository,
@@ -49,27 +38,34 @@ var NotePuchaseAgreementSet wire.ProviderSet = wire.NewSet(
 	awss3.NewClient,
 	data.NewAgreementsRepository,
 
-	// agreements.NewNotePurchaseAgreementModel,
+	agreements.NewNotePurchaseAgreementModel,
 	NewNotePurchaseAgreementModelFactory,
 	agreements.NewNotePurchaseAgreementGateway,
 	bootstrap.NewGrpcConnection,
-	// currently the client returns error, so using mock client
-	// bootstrap.NewNotePurchaseAgreementClient,
-	documents.NewDocClientMock,
+	bootstrap.NewNotePurchaseAgreementClient,
 	documents.NewDocumentContentService,
 	agreements.NewNotePurchaseAgreementService,
 	controllers.NewNotePurchaseAgreementController)
 
 var StatementSet wire.ProviderSet = wire.NewSet(
 	data.NewStatementsRepository,
-	// agreements.NewNotePurchaseAgreementGateway,
-	// agreements.NewNotePurchaseAgreementModel,
-	// NewNotePurchaseAgreementModelFactory,
-	// bootstrap.NewGrpcConnection,
-	// bootstrap.NewNotePurchaseAgreementClient,
-	// documents.NewDocumentContentManager,
-	// agreements.NewNotePurchaseAgreementService,
-	controllers.NewNotePurchaseAgreementController)
+	common.NewLogger,
+	interop.NewStatementServiceClient,
+	controllers.NewStatementController)
+
+func main() {
+	app, err := Bootstrap()
+	fmt.Println("app bootstrap: ", app)
+	if err != nil {
+		panic(fmt.Errorf("failed to boostrap application: %w", err))
+	}
+
+	err = app.Run()
+
+	if err != nil {
+		panic(fmt.Errorf("failed to run application: %w", err))
+	}
+}
 
 func Bootstrap() (*bootstrap.App, error) {
 
@@ -77,6 +73,8 @@ func Bootstrap() (*bootstrap.App, error) {
 		config.NewConfig,
 		UserSet,
 		NotePuchaseAgreementSet,
+		StatementSet,
+
 		provideAuthenticationInterceptor,
 		interceptors.NewConsumerDrivenContractTestingInterceptor,
 		interceptors.NewController,
@@ -122,7 +120,7 @@ func NewNotePurchaseAgreementModelFactory() interfaces.INotePurchaseAgreementMod
 // }
 
 func (factory *Factory) NewUserModel(context ctx.Context, user *interop.User) (interfaces.IUserModel, error) {
-	return &users.UserModel{}, nil
+	return nil, nil
 	// fmt.Println("here in NewUserModel")
 	// userModel, err := UserModelInitializer()
 	// if err != nil {

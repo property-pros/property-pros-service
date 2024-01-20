@@ -43,8 +43,15 @@ func (gateway *UsersGateway) GetUser(user data.User) (*data.User, error) {
 }
 
 func (gateway *UsersGateway) SaveUser(ctx context.Context, agreement *interop.NotePurchaseAgreement) (*interop.NotePurchaseAgreement, error) {
+
+	userId := agreement.GetUser().GetId()
+
+	if userId == "" {
+		userId = uuid.New().String()
+	}
+
 	userData := data.User{
-		Id:             uuid.New().String(),
+		Id:             userId,
 		FirstName:      agreement.GetFirstName(),
 		LastName:       agreement.GetLastName(),
 		DateOfBirth:    agreement.GetDateOfBirth(),
@@ -61,7 +68,11 @@ func (gateway *UsersGateway) SaveUser(ctx context.Context, agreement *interop.No
 		return nil, err
 	}
 
-	agreement.User.Id = user.Id
+	agreementResultValue := *agreement
+
+	agreementResult := &agreementResultValue
+
+	agreementResult.User.Id = user.Id
 
 	return agreement, nil
 }

@@ -54,9 +54,9 @@ func (suite *UsersServiceTestSuite) TestAuthenticateUser() {
 	suite.AssertExpectationsAuthenticateUser(authResult, err)
 }
 
-func (suite *UsersServiceTestSuite) AssertExpectationsAuthenticateUser(result bool, err error) {
+func (suite *UsersServiceTestSuite) AssertExpectationsAuthenticateUser(result string, err error) {
 	suite.Assert().Nil(err)
-	suite.Assert().True(result)
+	suite.Assert().NotEmpty(result)
 }
 
 type MockUserGateway struct {

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -64,14 +65,18 @@ func (mock *MockTestAgreementsService) GetNotePurchaseAgreement(context.Context,
 	return args.Get(0).(*interop.NotePurchaseAgreement), args.Error(1)
 }
 
-func (mock *MockTestAgreementsService) GetNotePurchaseAgreements(context.Context) ([]interfaces.IAgreementModel, error) {
+func (mock *MockTestAgreementsService) GetNotePurchaseAgreements(context.Context, string) ([]*interop.NotePurchaseAgreement, error) {
 	args := mock.Called()
 
-	return args.Get(0).([]interfaces.IAgreementModel), args.Error(1)
+	return args.Get(0).([]*interop.NotePurchaseAgreement), args.Error(1)
 }
 
 func (mock *MockTestAgreementsService) Save(context.Context, *interop.NotePurchaseAgreement) (*interop.NotePurchaseAgreement, error) {
 	args := mock.Called()
 
 	return args.Get(0).(*interop.NotePurchaseAgreement), args.Error(1)
+}
+
+func TestMain(m *testing.M) {
+	os.Exit(m.Run())
 }

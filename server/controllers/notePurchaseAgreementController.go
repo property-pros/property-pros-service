@@ -2,8 +2,11 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 
+	"github.com/vireocloud/property-pros-service/constants"
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
 )
@@ -20,29 +23,37 @@ type NotePurchaseAgreementController struct {
 }
 
 func notePurchaseAgreementToRecordResult(agreement *interop.NotePurchaseAgreement) *interop.RecordResultPayload {
+	// Return a RecordResultPayload from the NotePurchaseAgreement
 	return &interop.RecordResultPayload{
 		Id:        agreement.Id,
 		CreatedOn: agreement.CreatedOn,
 	}
 }
 
-func notePurchaseAgreementListToRecordCollection(result []interfaces.IAgreementModel) *interop.RecordColection {
+func notePurchaseAgreementListToRecordCollection(result []*interop.NotePurchaseAgreement) []*interop.RecordResultPayload {
 	payload := []*interop.RecordResultPayload{}
-	recordCollection := &interop.RecordColection{Payload: payload}
 
 	for _, agreement := range result {
-		payload = append(payload, notePurchaseAgreementToRecordResult(agreement.GetPayload()))
+		payload = append(payload, notePurchaseAgreementToRecordResult(agreement))
 	}
 
-	return recordCollection
+	return payload
 }
 
 func (c *NotePurchaseAgreementController) GetNotePurchaseAgreements(ctx context.Context, req *interop.GetNotePurchaseAgreementsRequest) (*interop.GetNotePurchaseAgreementsResponse, error) {
 
 	response := &interop.GetNotePurchaseAgreementsResponse{}
 
-	result, err := c.notePurchaseAgreementService.GetNotePurchaseAgreements(ctx)
+	userIdFromContext := ctx.Value(constants.UserIdKey)
 
+	if userIdFromContext == nil {
+		return nil, errors.New("unresolved userid")
+	}
+
+	usrID := fmt.Sprintf("%v", userIdFromContext)
+
+	result, err := c.notePurchaseAgreementService.GetNotePurchaseAgreements(ctx, usrID)
+	log.Printf("note purchase agreement results: %+v", result)
 	if err != nil {
 		return response, err
 	}
@@ -61,18 +72,19 @@ func (c *NotePurchaseAgreementController) GetNotePurchaseAgreement(ctx context.C
 	if err != nil {
 		return response, err
 	}
-
+	fmt.Printf("GetNotePurchaseAgreement result: %+v", result)
 	response.Payload = result
 
 	return response, nil
 }
 
 func (c *NotePurchaseAgreementController) SaveNotePurchaseAgreement(ctx context.Context, req *interop.SaveNotePurchaseAgreementRequest) (response *interop.SaveNotePurchaseAgreementResponse, errResult error) {
-
+	payloadValue := *req.GetPayload()
+	fmt.Printf("SaveNotePurchaseAgreement called; \r\n\n payload: %+v \n\n", &payloadValue)
 	response = &interop.SaveNotePurchaseAgreementResponse{}
 
-	result, err := c.notePurchaseAgreementService.Save(ctx, req.Payload)
-	fmt.Printf("user id: %v", result.User.Id)
+	result, err := c.notePurchaseAgreementService.Save(ctx, &payloadValue)
+
 	if err != nil {
 		return response, err
 	}
@@ -81,20 +93,20 @@ func (c *NotePurchaseAgreementController) SaveNotePurchaseAgreement(ctx context.
 
 	return response, nil
 }
+func (c *NotePurchaseAgreementController) GetNotePurchaseAgreementDoc(req *interop.GetNotePurchaseAgreementDocRequest, stream interop.NotePurchaseAgreementService_GetNotePurchaseAgreementDocServer) error {
 
-func (c *NotePurchaseAgreementController) GetNotePurchaseAgreementDoc(ctx context.Context, req *interop.GetNotePurchaseAgreementDocRequest) (response *interop.GetNotePurchaseAgreementDocResponse, errResult error) {
-
-	response = &interop.GetNotePurchaseAgreementDocResponse{}
-
-	doc, returnErr := c.notePurchaseAgreementService.GetNotePurchaseAgreementDocContent(ctx, req.GetPayload())
-
-	if returnErr != nil {
-		return response, returnErr
+	doc, err := c.notePurchaseAgreementService.GetNotePurchaseAgreementDocContent(stream.Context(), req.GetPayload())
+	if err != nil {
+		return err
+	}
+	
+	if err := stream.Send(&interop.GetNotePurchaseAgreementDocResponse{
+		FileContent: doc,
+	}); err != nil {
+		return err
 	}
 
-	response.FileContent = doc
-
-	return response, returnErr
+	return nil
 }
 
 func NewNotePurchaseAgreementController(notePurchaseAgreementService interfaces.IAgreementsService, authService interfaces.IUsersService) *NotePurchaseAgreementController {

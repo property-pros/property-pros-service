@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/vireocloud/property-pros-service/interfaces"
 	"github.com/vireocloud/property-pros-service/interop"
@@ -22,16 +23,15 @@ type AuthController struct {
 }
 
 func (c *AuthController) AuthenticateUser(ctx context.Context, req *interop.AuthenticateUserRequest) (*interop.AuthenticateUserResponse, error) {
-
 	response := &interop.AuthenticateUserResponse{}
 
-	isAuthentic, err := c.authService.AuthenticateUser(ctx, req.Payload)
+	usrID, err := c.authService.AuthenticateUser(ctx, req.Payload)
 
 	if err != nil {
 		return response, err
 	}
 
-	response.IsAuthenticated = isAuthentic
+	response.IsAuthenticated = usrID != ""
 
 	// We want to extract metadata from the incomming context.
 	// We dont create a new context since we dont wanna overwrite old metadata
@@ -39,10 +39,13 @@ func (c *AuthController) AuthenticateUser(ctx context.Context, req *interop.Auth
 	if !ok {
 		return nil, errors.New("could not grab metadata from context")
 	}
+	// fmt.Printf("meta: %v", c.authService.GenerateBasicUserAuthToken(req.Payload))
 	// Set authorization  metadata for the client to send in subsequent requests
 	meta.Set("authorization", c.authService.GenerateBasicUserAuthToken(req.Payload))
 	// Metadata is sent on its own, so we need to send the header. There is also something called Trailer
 	grpc.SendHeader(ctx, meta)
+
+	fmt.Println("bottom of AuthenticateUser; sent header")
 
 	return response, nil
 }

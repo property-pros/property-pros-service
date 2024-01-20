@@ -1,0 +1,11 @@
+path: /Users/scottterry/Workspace/property-pros-service/.env
+parsing args: [/var/folders/h3/h6xs192x79v5y5jlmd3_jw400000gp/T/go-build3458765955/b001/controllers.test]
+--- FAIL: TestStatementControllerApiTestSuite (2.54s)
+    statementController_api_test.go:86: authToken: Basic CgV1c2VyMRIRdXNlcjFAZXhhbXBsZS5jb20aCHBhc3N3b3Jk
+    statementController_api_test.go:111: testNotePurchaseAgreement: id:"84e3a12b-2dfb-46d1-89b2-da1dd150f0cb" user:{id:"7e25bdaf-88a2-4655-877d-90c274f3cf51" email_address:"user1@example.com" password:"password"} created_on:"2023-07-02T16:16:05-07:00"
+    statementController_api_test.go:112: testNotePurchaseAgreement user: id:"7e25bdaf-88a2-4655-877d-90c274f3cf51" email_address:"user1@example.com" password:"password"
+    --- FAIL: TestStatementControllerApiTestSuite/TestGetStatements (0.00s)
+FAIL
+coverage: [no statements]
+FAIL	command-line-arguments	3.090s
+FAIL

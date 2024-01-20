@@ -1,0 +1,9 @@
+steps:
+- name: "gcr.io/cloud-builders/docker"
+  args:
+  - build
+  - "--tag=us-west1-docker.pkg.dev/vireo-401203/pp/pps:${_UNIQUE_TAG_}"
+  - "--file=./Dockerfile.release"
+  - "."
+images:
+  - 'us-west1-docker.pkg.dev/vireo-401203/pp/pps:${_UNIQUE_TAG_}'

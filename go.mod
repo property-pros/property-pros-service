@@ -8,12 +8,13 @@ require (
 	github.com/aws/aws-sdk-go v1.44.214
 	github.com/go-playground/validator/v10 v10.2.0
 	github.com/google/uuid v1.1.2
+	github.com/grpc-ecosystem/go-grpc-middleware v1.2.2
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.0
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/joho/godotenv v1.4.0
 	github.com/omeid/uconfig v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.8.0
-	github.com/vireocloud/property-pros-sdk v0.0.19
+	github.com/vireocloud/property-pros-sdk v0.0.35
 	golang.org/x/net v0.8.0
 	google.golang.org/grpc v1.51.0
 	gorm.io/driver/postgres v1.3.8
